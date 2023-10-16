@@ -1,6 +1,3 @@
-package main
+package agent
 
-func main() {
-	//
-
-}
+// flush
