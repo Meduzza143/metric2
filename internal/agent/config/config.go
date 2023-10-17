@@ -49,3 +49,17 @@ func (c *Settings) initConfig() {
 		c.PollInterval, _ = time.ParseDuration(pollString)
 	}
 }
+
+func (c *Settings) CheckConfig() (pass bool) {
+	pass = true
+	//report interval check
+	if c.ReportInterval <= 0 {
+		pass = false
+	}
+	//poll interval check
+	if c.PollInterval <= 0 {
+		pass = false
+	}
+
+	return
+}
