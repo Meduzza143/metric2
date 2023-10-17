@@ -2,7 +2,6 @@ package server
 
 import (
 	"flag"
-	"os"
 )
 
 type Address struct {
@@ -16,11 +15,11 @@ func GetConfig() (a Address) {
 
 func (c *Address) initConfig() {
 
-	adr, ok := os.LookupEnv("ADDRESS")
+	//adr, ok := os.LookupEnv("ADDRESS")
 	// if !ok {
 	flagAdrPtr := flag.String("a", "localhost:8080", "endpont address:port")
 	flag.Parse()
-	adr = *flagAdrPtr
+	//adr = *flagAdrPtr
 	// }
-	c.Listen = adr
+	c.Listen = *flagAdrPtr
 }
