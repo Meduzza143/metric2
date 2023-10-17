@@ -6,7 +6,7 @@ import (
 )
 
 type Address struct {
-	Listen string
+	Listen *string
 }
 
 func GetConfig() (a Address) {
@@ -22,5 +22,5 @@ func (c *Address) initConfig() {
 		flag.Parse()
 		adr = *flagAdrPtr
 	}
-	c.Listen = adr
+	c.Listen = &adr
 }

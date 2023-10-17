@@ -13,9 +13,9 @@ func main() {
 	conf := config.GetConfig()
 	r := server.Router()
 
-	fmt.Printf("starting server... at %v \n", conf.Listen)
+	fmt.Printf("starting server... at %v \n", *conf.Listen)
 
-	err := http.ListenAndServe(conf.Listen, r)
+	err := http.ListenAndServe(*conf.Listen, r)
 	if err != nil {
 		panic(err)
 	}
