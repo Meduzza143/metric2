@@ -21,7 +21,7 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	switch vars["type"] {
+	switch vars["type"] { //gauge : float64, counter: int64
 	case "gauge":
 		_, err := strconv.ParseFloat(vars["value"], 64) //оставим проверку на тип
 		if err == nil {
@@ -31,14 +31,14 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	case "counter":
-		_, err := strconv.ParseInt(vars["value"], 0, 64)
+		val, err := strconv.ParseInt(vars["value"], 0, 64)
 		if err == nil { // new value
 			thisValue := memStorage.GetValue(vars["name"])
 			if (thisValue == storage.MemStruct{}) { //new value
 				memStorage.SetValue(vars["name"], vars["type"], vars["value"])
 			} else { //increase counter
 				currValue, _ := strconv.ParseInt(thisValue.Value, 0, 64)
-				currValue += 1
+				currValue += val
 				memStorage.SetValue(vars["name"], vars["type"], strconv.FormatInt(currValue, 10))
 			}
 			w.WriteHeader(http.StatusOK)
