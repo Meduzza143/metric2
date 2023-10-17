@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Meduzza143/metric/internal/agent"
@@ -13,6 +14,8 @@ func main() {
 
 	reportTicker := time.NewTicker(conf.ReportInterval)
 	pollTicker := time.NewTicker(conf.PollInterval)
+
+	fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", conf.Address, conf.PollInterval, conf.ReportInterval)
 
 	for {
 		select {
