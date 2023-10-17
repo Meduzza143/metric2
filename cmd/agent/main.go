@@ -9,11 +9,12 @@ import (
 )
 
 func main() {
+	fmt.Println("main teset msg ... agent")
 	conf := config.GetConfig()
 	data := agent.NewStorage()
 
-	reportTicker := time.NewTicker(*conf.ReportInterval)
-	pollTicker := time.NewTicker(*conf.PollInterval)
+	reportTicker := time.NewTicker(conf.ReportInterval)
+	pollTicker := time.NewTicker(conf.PollInterval)
 
 	fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", conf.Address, conf.PollInterval, conf.ReportInterval)
 
