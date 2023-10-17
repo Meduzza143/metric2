@@ -15,13 +15,14 @@ func main() {
 
 	//fmt.Printf("starting server... at %v \n", *conf.Listen)
 
-	var par string
-	flag.StringVar(&par, "a", "localhost:8080", "endpont address:port")
+	// var par string
+	// flag.StringVar(&par, "a", "localhost:8080", "endpont address:port")
+	ptr := flag.String("a", "localhost:8080", "endpont address:port")
 	flag.Parse()
 
-	fmt.Printf("starting server... at %v \n", par)
+	fmt.Printf("starting server... at %v \n", *ptr)
 
-	err := http.ListenAndServe(par, r)
+	err := http.ListenAndServe(*ptr, r)
 	if err != nil {
 		panic(err)
 	}
