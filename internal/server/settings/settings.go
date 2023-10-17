@@ -6,12 +6,12 @@ import (
 )
 
 type Config struct {
-	Listen string
+	Address string
 }
 
-func GetConfig() (a *Config) {
-	a.initConfig()
-	return
+func (c *Config) GetConfig() *Config {
+	c.initConfig()
+	return c
 }
 
 func (c *Config) initConfig() {
@@ -22,5 +22,5 @@ func (c *Config) initConfig() {
 		flag.Parse()
 		adr = *flagAdrPtr
 	}
-	c.Listen = adr
+	c.Address = adr
 }
