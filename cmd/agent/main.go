@@ -17,7 +17,7 @@ func main() {
 	if conf.CheckConfig() == false {
 		fmt.Printf("wrong arguments:")
 		fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", conf.Address, conf.PollInterval, conf.ReportInterval)
-		os.Exit(101)
+		os.Exit(0)
 	}
 
 	fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", conf.Address, conf.PollInterval, conf.ReportInterval)
