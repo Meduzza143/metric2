@@ -5,16 +5,16 @@ import (
 	"os"
 )
 
-type Config struct {
-	Address string
+type Address struct {
+	Listen string
 }
 
-func (c *Config) GetConfig() *Config {
-	c.initConfig()
-	return c
+func GetConfig() (a Address) {
+	a.initConfig()
+	return
 }
 
-func (c *Config) initConfig() {
+func (c *Address) initConfig() {
 
 	adr, ok := os.LookupEnv("ADDRESS")
 	if !ok {
@@ -22,5 +22,5 @@ func (c *Config) initConfig() {
 		flag.Parse()
 		adr = *flagAdrPtr
 	}
-	c.Address = adr
+	c.Listen = adr
 }
