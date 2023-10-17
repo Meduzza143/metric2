@@ -2,6 +2,7 @@ package agent
 
 import (
 	"flag"
+	"os"
 	"time"
 )
 
@@ -26,23 +27,23 @@ func (c *Settings) initConfig() {
 
 	flag.Parse()
 
-	//adr, ok := os.LookupEnv("ADDRESS")
-	//if !ok {
-	adr := *flagAdrPtr
-	//}
+	adr, ok := os.LookupEnv("ADDRESS")
+	if !ok {
+		adr = *flagAdrPtr
+	}
 	c.Address = "http://" + adr
 
-	// repString, ok := os.LookupEnv("REPORT_INTERVAL")
-	// if !ok {
-	c.ReportInterval = *flagRepPtr
-	// } else {
-	// 	c.ReportInterval, _ = time.ParseDuration(repString)
-	// }
+	repString, ok := os.LookupEnv("REPORT_INTERVAL")
+	if !ok {
+		c.ReportInterval = *flagRepPtr
+	} else {
+		c.ReportInterval, _ = time.ParseDuration(repString)
+	}
 
-	// pollString, ok := os.LookupEnv("POLL_INTERVAL")
-	// if !ok {
-	c.PollInterval = *flagPolPtr
-	// } else {
-	// 	c.PollInterval, _ = time.ParseDuration(pollString)
-	// }
+	pollString, ok := os.LookupEnv("POLL_INTERVAL")
+	if !ok {
+		c.PollInterval = *flagPolPtr
+	} else {
+		c.PollInterval, _ = time.ParseDuration(pollString)
+	}
 }

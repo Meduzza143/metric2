@@ -2,24 +2,25 @@ package server
 
 import (
 	"flag"
+	"os"
 )
 
-type Address struct {
+type Config struct {
 	Listen string
 }
 
-func GetConfig() (a Address) {
+func GetConfig() (a *Config) {
 	a.initConfig()
 	return
 }
 
-func (c *Address) initConfig() {
+func (c *Config) initConfig() {
 
-	var adr string
-	// adr, ok := os.LookupEnv("ADDRESS")
-	// if !ok {
-	flag.StringVar(&adr, "a", "localhost:8080", "endpont address:port")
-	flag.Parse()
-	// }
+	adr, ok := os.LookupEnv("ADDRESS")
+	if !ok {
+		flagAdrPtr := flag.String("a", "localhost:8080", "endpont address:port")
+		flag.Parse()
+		adr = *flagAdrPtr
+	}
 	c.Listen = adr
 }
