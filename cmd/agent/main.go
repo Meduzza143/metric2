@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"time"
 
 	"github.com/Meduzza143/metric/internal/agent"
@@ -15,7 +15,8 @@ func main() {
 	data := agent.NewStorage()
 
 	if conf.CheckConfig() == false {
-		log.Fatal("wrong arguments")
+		fmt.Printf("wrong arguments")
+		os.Exit(101)
 	}
 
 	fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", conf.Address, conf.PollInterval, conf.ReportInterval)
