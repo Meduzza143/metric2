@@ -22,8 +22,10 @@ func GetConfig() (c Settings) {
 func (c *Settings) initConfig() {
 
 	flagAdrPtr := flag.String("a", "localhost:8080", "endpont address:port")
-	flagRepPtr := flag.Duration("r", 10*time.Second, "report interval in seconds")
-	flagPolPtr := flag.Duration("p", 2*time.Second, "poll interval in seconds")
+	//	flagRepPtr := flag.Duration("r", 10, "report interval in seconds")
+	//	flagPolPtr := flag.Duration("p", 2, "poll interval in seconds")
+	flagRepPtr := flag.Int("r", 10, "report interval in seconds")
+	flagPolPtr := flag.Int("p", 2, "poll interval in seconds")
 
 	flag.Parse()
 
@@ -35,14 +37,14 @@ func (c *Settings) initConfig() {
 
 	repString, ok := os.LookupEnv("REPORT_INTERVAL")
 	if !ok {
-		c.ReportInterval = *flagRepPtr
+		c.ReportInterval = time.Duration(*flagRepPtr) * time.Second
 	} else {
 		c.ReportInterval, _ = time.ParseDuration(repString)
 	}
 
 	pollString, ok := os.LookupEnv("POLL_INTERVAL")
 	if !ok {
-		c.PollInterval = *flagPolPtr
+		c.PollInterval = time.Duration(*flagPolPtr) * time.Second
 	} else {
 		c.PollInterval, _ = time.ParseDuration(pollString)
 	}
