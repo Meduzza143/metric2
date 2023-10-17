@@ -17,7 +17,7 @@ func main() {
 
 	// var par string
 	// flag.StringVar(&par, "a", "localhost:8080", "endpont address:port")
-	ptr := flag.String("a", "localhost:8080", "endpont address:port")
+	var ptr = flag.String("a", "localhost:8080", "endpont address:port")
 	flag.Parse()
 
 	fmt.Printf("starting server... at %v \n", *ptr)
