@@ -1,7 +1,5 @@
 package storage
 
-import "fmt"
-
 type MemStruct struct {
 	MetricType string
 	Value      string
@@ -21,16 +19,16 @@ var storage memStorage = nil
 func (memStorage) SetValue(key, metricType, value string) {
 	storage[key] = MemStruct{metricType, value}
 
-	fmt.Printf("value has ben set [%v]\n ", storage[key])
+	//fmt.Printf("value has ben set [%v]\n ", storage[key])
 }
 
 func (memStorage) GetAllValues() memStorage {
-	fmt.Printf("getting all values [%v]\n ", storage)
+	//fmt.Printf("getting all values [%v]\n ", storage)
 	return storage
 }
 
 func (memStorage) GetValue(key string) MemStruct {
-	fmt.Printf("getting value [%v]\n ", storage[key])
+	//fmt.Printf("getting value [%v]\n ", storage[key])
 	return storage[key]
 }
 

@@ -4,20 +4,49 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/Meduzza143/metric/internal/logger"
 	"github.com/Meduzza143/metric/internal/server/storage"
 	"github.com/gorilla/mux"
 )
 
+// //////// testing mux.Use
+// func LogMiddleware(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+// 		l := logger.GetLogger()
+// 		l.Info().Msg("test log middleware")
+
+// 		// compare the return-value to the authMW
+// 		next.ServeHTTP(w, req)
+// 	})
+// }
+
+/*
+			    Сведения о запросах должны содержать URI, метод запроса и время, затраченное на его выполнение.
+	    		Сведения об ответах должны содержать код статуса и размер содержимого ответа.
+*/
+func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		l := logger.GetLogger()
+		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")
+		reqStart := time.Now()
+
+		next(w, req)
+
+		reqDuration := time.Now().Sub(reqStart)
+		l.Info().Dur("request running time", reqDuration).Msg("request")
+	})
+}
+
 // //http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
 func UpdateHandle(w http.ResponseWriter, req *http.Request) {
-	//memStorage := storage.GetInstance()
 	memStorage := storage.GetInstance()
 	w.Header().Set("content-type", "text/plain")
 	vars := mux.Vars(req)
+	headerStatus := http.StatusNotFound
 
 	if vars["name"] == "" {
-		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
@@ -26,9 +55,9 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 		_, err := strconv.ParseFloat(vars["value"], 64) //оставим проверку на тип
 		if err == nil {
 			memStorage.SetValue(vars["name"], vars["type"], vars["value"])
-			w.WriteHeader(http.StatusOK)
+			headerStatus = http.StatusOK
 		} else {
-			w.WriteHeader(http.StatusBadRequest)
+			headerStatus = http.StatusBadRequest
 		}
 	case "counter":
 		val, err := strconv.ParseInt(vars["value"], 0, 64)
@@ -41,13 +70,14 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 				currValue += val
 				memStorage.SetValue(vars["name"], vars["type"], strconv.FormatInt(currValue, 10))
 			}
-			w.WriteHeader(http.StatusOK)
+			headerStatus = http.StatusOK
 		} else {
-			w.WriteHeader(http.StatusBadRequest) //wrong value type
+			headerStatus = http.StatusBadRequest
 		}
 	default:
-		w.WriteHeader(http.StatusBadRequest)
+		headerStatus = http.StatusBadRequest
 	}
+	ResponseWritter(w, headerStatus, "")
 }
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
@@ -55,15 +85,16 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	memStorage := storage.GetInstance()
 	vars := mux.Vars(req)
 	val := memStorage.GetValue(vars["name"])
+	headerStatus := http.StatusNotFound
 	if val.MetricType == vars["type"] {
 		switch val.MetricType {
 		case "gauge", "counter":
-			w.Write([]byte(fmt.Sprint(val.Value)))
+			ResponseWritter(w, http.StatusOK, fmt.Sprint(val.Value))
 		default:
-			w.WriteHeader(http.StatusNotFound)
+			ResponseWritter(w, headerStatus, "")
 		}
 	} else {
-		w.WriteHeader(http.StatusNotFound)
+		ResponseWritter(w, headerStatus, "")
 	}
 }
 
@@ -71,10 +102,8 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 	memStorage := storage.GetInstance()
 	w.Header().Set("content-type", "text/plain")
 	body := "Current values: \n"
-	fmt.Println(memStorage.GetAllValues())
+	//fmt.Println(memStorage.GetAllValues())
 	for k, v := range memStorage.GetAllValues() {
-		// fmt.Printf("k[%v], v[%v]\n", k, v)
-		// fmt.Printf("metric type: %v\n", v.MetricType)
 		switch v.MetricType {
 		case "gauge":
 			body += fmt.Sprintf("%v = %v \n", k, v.Value)
@@ -82,5 +111,7 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 			body += fmt.Sprintf("%v = %v \n", k, v.Value)
 		}
 	}
-	w.Write([]byte(body))
+	ResponseWritter(w, http.StatusOK, body)
+	// w.WriteHeader(http.StatusOK)
+	// w.Write([]byte(body))
 }
