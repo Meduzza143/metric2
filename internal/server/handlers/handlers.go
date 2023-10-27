@@ -11,17 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// //////// testing mux.Use
-// func LogMiddleware(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-// 		l := logger.GetLogger()
-// 		l.Info().Msg("test log middleware")
-
-// 		// compare the return-value to the authMW
-// 		next.ServeHTTP(w, req)
-// 	})
-// }
-
 /*
 			    Сведения о запросах должны содержать URI, метод запроса и время, затраченное на его выполнение.
 	    		Сведения об ответах должны содержать код статуса и размер содержимого ответа.
@@ -32,7 +21,19 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")
 		reqStart := time.Now()
 
-		next(w, req)
+		respdata := responseData{
+			status: 0,
+			size:   0,
+		}
+		loggingWriter := loggingResponseWriter{
+			ResponseWriter: w,
+			responseData:   &respdata,
+		}
+
+		//next(w, req)
+		next(&loggingWriter, req) //какого фига это вообще работает ??????????????????????????????????????????????
+
+		l.Info().Int("status", respdata.status).Int("size", respdata.size).Msg("response")
 
 		reqDuration := time.Now().Sub(reqStart)
 		l.Info().Dur("request running time", reqDuration).Msg("request")
@@ -111,7 +112,8 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 			body += fmt.Sprintf("%v = %v \n", k, v.Value)
 		}
 	}
-	ResponseWritter(w, http.StatusOK, body)
+	//	ResponseWritter(w, http.StatusOK, body)
+	//
 	// w.WriteHeader(http.StatusOK)
 	// w.Write([]byte(body))
 }
