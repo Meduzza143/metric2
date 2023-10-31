@@ -2,7 +2,10 @@ package storage
 
 type MemStruct struct {
 	MetricType string
-	Value      string
+	//Value      string
+	GaugeValue   float64
+	CounterValue int64
+	MetricName   string
 }
 type memStorage map[string]MemStruct
 
@@ -16,10 +19,12 @@ var storage memStorage = nil
 // 	GetValue(key string) MemStruct
 // }
 
-func (memStorage) SetValue(key, metricType, value string) {
-	storage[key] = MemStruct{metricType, value}
+// func (memStorage) SetValue(MetricName, metricType string, gaugeValue float64, counterValue int64) {
+func (memStorage) SetValue(MetricName string, metric MemStruct) {
 
-	//fmt.Printf("value has ben set [%v]\n ", storage[key])
+	metric.CounterValue = storage[MetricName].CounterValue + metric.CounterValue
+	storage[MetricName] = metric
+
 }
 
 func (memStorage) GetAllValues() memStorage {

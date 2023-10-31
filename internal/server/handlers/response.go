@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+
+	"github.com/Meduzza143/metric/internal/logger"
 )
 
 type (
@@ -28,11 +30,11 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func ResponseWritter(w http.ResponseWriter, status int, body string) {
+func ResponseWritter(w http.ResponseWriter, status int, data []byte) {
 
-	// l := logger.GetLogger()
-	// l.Info().Int("status", status).Int("body size", len(body)).Msg("response")
+	l := logger.GetLogger()
+	l.Info().Int("status", status).Int("body size", len(data)).Msg("response")
 
 	w.WriteHeader(status)
-	w.Write([]byte(body))
+	w.Write(data)
 }

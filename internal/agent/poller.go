@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"runtime"
 	"strconv"
-	//storage "github.com/Meduzza143/metric/internal/agent/storage"
 )
 
 func (storage MemStorage) Poll() {

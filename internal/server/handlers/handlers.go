@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/Meduzza143/metric/internal/logger"
@@ -42,78 +41,82 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 // //http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
 func UpdateHandle(w http.ResponseWriter, req *http.Request) {
-	memStorage := storage.GetInstance()
-	w.Header().Set("content-type", "text/plain")
-	vars := mux.Vars(req)
-	headerStatus := http.StatusNotFound
+	var status int
+	var metric storage.MemStruct
+	var reqIsJson = isJson(*req)
+	var answer []byte
 
-	if vars["name"] == "" {
-		return
+	if reqIsJson {
+		var jsonBody MetricsJson
+		metric, status = jsonBody.Deserialize(req)
+		w.Header().Set("content-type", "application/json")
+	} else {
+		var plainBody MetricsPlain
+		metric, status = plainBody.Deserialize(req)
+		w.Header().Set("content-type", "text/plain")
 	}
 
-	switch vars["type"] { //gauge : float64, counter: int64
-	case "gauge":
-		_, err := strconv.ParseFloat(vars["value"], 64) //оставим проверку на тип
-		if err == nil {
-			memStorage.SetValue(vars["name"], vars["type"], vars["value"])
-			headerStatus = http.StatusOK
+	if status == http.StatusOK { //ok
+		memStorage := storage.GetInstance()
+		memStorage.SetValue(metric.MetricName, metric)
+
+		if reqIsJson {
+			var jsonBody MetricsJson
+			answer = jsonBody.Serialize(metric)
 		} else {
-			headerStatus = http.StatusBadRequest
+			var plainBody MetricsPlain
+			answer = plainBody.Serialize(metric)
 		}
-	case "counter":
-		val, err := strconv.ParseInt(vars["value"], 0, 64)
-		if err == nil { // new value
-			thisValue := memStorage.GetValue(vars["name"])
-			if (thisValue == storage.MemStruct{}) { //new value
-				memStorage.SetValue(vars["name"], vars["type"], vars["value"])
-			} else { //increase counter
-				currValue, _ := strconv.ParseInt(thisValue.Value, 0, 64)
-				currValue += val
-				memStorage.SetValue(vars["name"], vars["type"], strconv.FormatInt(currValue, 10))
-			}
-			headerStatus = http.StatusOK
-		} else {
-			headerStatus = http.StatusBadRequest
-		}
-	default:
-		headerStatus = http.StatusBadRequest
 	}
-	ResponseWritter(w, headerStatus, "")
+
+	ResponseWritter(w, status, answer) //deserialize answer
 }
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
+
 	w.Header().Set("content-type", "text/plain")
 	memStorage := storage.GetInstance()
 	vars := mux.Vars(req)
 	val := memStorage.GetValue(vars["name"])
-	headerStatus := http.StatusNotFound
+	//headerStatus := http.StatusNotFound
 	if val.MetricType == vars["type"] {
 		switch val.MetricType {
 		case "gauge", "counter":
-			ResponseWritter(w, http.StatusOK, fmt.Sprint(val.Value))
+			//ResponseWritter(w, http.StatusOK, fmt.Sprint(val.Value))
+			//ResponseWritter(w, http.StatusOK, fmt.Sprint(val.GaugeValue))
 		default:
-			ResponseWritter(w, headerStatus, "")
+			//ResponseWritter(w, headerStatus, "")
 		}
 	} else {
-		ResponseWritter(w, headerStatus, "")
+		//		ResponseWritter(w, headerStatus, "")
 	}
 }
 
 func GetAll(w http.ResponseWriter, req *http.Request) {
 	memStorage := storage.GetInstance()
 	w.Header().Set("content-type", "text/plain")
+
 	body := "Current values: \n"
 	//fmt.Println(memStorage.GetAllValues())
 	for k, v := range memStorage.GetAllValues() {
 		switch v.MetricType {
 		case "gauge":
-			body += fmt.Sprintf("%v = %v \n", k, v.Value)
+			//body += fmt.Sprintf("%v = %v \n", k, v.Value)
+			body += fmt.Sprintf("%v = %v \n", k, v.GaugeValue)
 		case "counter":
-			body += fmt.Sprintf("%v = %v \n", k, v.Value)
+			//body += fmt.Sprintf("%v = %v \n", k, v.Value)
+			body += fmt.Sprintf("%v = %v \n", k, v.CounterValue)
 		}
 	}
 	//	ResponseWritter(w, http.StatusOK, body)
 	//
 	// w.WriteHeader(http.StatusOK)
-	// w.Write([]byte(body))
+	//w.Write([]byte(body))
+}
+
+func isJson(r http.Request) bool {
+	if r.Header.Get("Content-Type") == "application/json" {
+		return true
+	}
+	return false
 }
