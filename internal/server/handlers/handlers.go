@@ -63,10 +63,10 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 		case "counter":
 			ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.CounterValue)))
 		default:
-			ResponseWritter(w, http.StatusBadRequest, []byte("type not found"))
+			ResponseWritter(w, http.StatusNotFound, []byte("type not found"))
 		}
 	} else {
-		ResponseWritter(w, http.StatusBadRequest, []byte("metric not found"))
+		ResponseWritter(w, http.StatusNotFound, []byte("metric not found"))
 	}
 }
 
