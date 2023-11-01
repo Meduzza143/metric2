@@ -28,8 +28,8 @@ func GetConfig() Settings {
 
 func (c *Settings) initConfig() {
 
-	c.Gzip = true
-	//c.Gzip = false
+	//c.Gzip = true
+	c.Gzip = false
 
 	flagAdrPtr := flag.String("a", "localhost:8080", "endpont address:port")
 	flagRepPtr := flag.Int("r", 10, "report interval in seconds")
