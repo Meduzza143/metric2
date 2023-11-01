@@ -3,12 +3,13 @@ package storage
 import "github.com/Meduzza143/metric/internal/logger"
 
 type MemStruct struct {
-	MetricType string
+	MetricType string `json:"MetricType"`
 	//Value      string
-	GaugeValue   float64
-	CounterValue int64
-	MetricName   string
+	GaugeValue   float64 `json:"GaugeValue,omitempty"`
+	CounterValue int64   `json:"CounterValue,omitempty"`
+	MetricName   string  `json:"id"`
 }
+
 type memStorage map[string]MemStruct
 
 var storage memStorage = nil

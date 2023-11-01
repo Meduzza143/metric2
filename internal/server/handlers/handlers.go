@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Meduzza143/metric/internal/server/controllers"
 	"github.com/Meduzza143/metric/internal/server/storage"
 	"github.com/gorilla/mux"
 )
@@ -42,6 +43,10 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	}
 
 	ResponseWritter(w, status, answer)
+
+	//test
+	s := controllers.GetSaveLoader()
+	s.SaveAll()
 }
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
