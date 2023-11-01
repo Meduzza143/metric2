@@ -16,7 +16,7 @@ func main() {
 	l := logger.GetLogger()
 
 	l.Info().Str("server address", cfg.Address).Msg("Agent")
-	l.Info().Dur("report interval", cfg.ReportInterval).Dur("poll interval", cfg.PollInterval).Bool("use gzip", cfg.Gzip).Msg("Agent")
+	l.Info().Dur("report interval", cfg.ReportInterval).Dur("poll interval", cfg.PollInterval).Bool("use gzip", cfg.Gzip).Msg("Agent starting")
 
 	reportTicker := time.NewTicker(cfg.ReportInterval)
 	pollTicker := time.NewTicker(cfg.PollInterval)

@@ -31,6 +31,7 @@ func (c *Config) initConfig() {
 	flagFilePath := flag.String("f", "./tmp/metrics-db.json", "file storage path")
 	//flagFilePath := flag.String("f", "metrics-db.json", "file storage path")
 	flagRestore := flag.Bool("r", true, "load data file on restart")
+	flag.Parse()
 
 	adr, ok := os.LookupEnv("ADDRESS")
 	if ok {
