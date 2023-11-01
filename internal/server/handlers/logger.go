@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -14,6 +15,8 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")
 		reqStart := time.Now()
 
+		fmt.Printf("HEADER:[%v]\n", req.Header)
+		fmt.Printf("BODY:[%v]\n", req.Body)
 		respdata := responseData{
 			status: 0,
 			size:   0,
