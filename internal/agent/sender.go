@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	config "github.com/Meduzza143/metric/internal/agent/config"
+	"github.com/Meduzza143/metric/internal/logger"
 )
 
 // type reader interface {
@@ -15,27 +16,22 @@ import (
 // 	Read([]byte) (int, error)
 // }
 
-// type readerPlain struct {
-// 	r *io.Reader
-// }
 // type readerGzip struct {
-// 	r *gzip.Reader
+// 	rz *gzip.Reader
+// 	r  *io.Reader
 // }
 
-// func (rp *readerPlain) ReadAll() ([]byte, error) {
-// 	return io.ReadAll(*rp.r)
-// }
 // func (rg *readerGzip) ReadAll() ([]byte, error) {
-// 	return io.ReadAll(rg.r)
+// 	return io.ReadAll(rg.rz)
 // }
-// func (rp *readerPlain) Read() ([]byte, error) {
-// 	return rp.Read()
+
+// func (rg *readerGzip) Read(data []byte) (int, error) {
+// 	return rg.rz.Read(data)
 // }
-// func (rg *readerGzip) Read() ([]byte, error) {
-// 	return rg.Read()
-// }
-// func ReadAll(ri reader) ([]byte, error) {
-// 	return io.ReadAll(ri)
+
+// func newReader(rw io.Reader) *readerGzip {
+// 	gr, _ := gzip.NewReader(rw)
+// 	return &readerGzip{gr, &rw}
 // }
 
 func (storage MemStorage) Send(url string) {
@@ -47,7 +43,11 @@ func (storage MemStorage) Send(url string) {
 func sendData(url, value, name, valueType string) {
 	cfg := config.GetConfig()
 	var request *http.Request
+	l := logger.GetLogger()
+
 	finalURL := fmt.Sprintf("%s/update/%s/%s/%s", url, valueType, name, value)
+
+	l.Info().Str("sending", finalURL).Msg("agent")
 
 	mockData := []byte(`
 	{
@@ -55,7 +55,7 @@ func sendData(url, value, name, valueType string) {
 	}
 	`)
 
-	request, err := http.NewRequest("POST", finalURL, bytes.NewBuffer(mockData))
+	request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(mockData))
 	request.Header.Set("Content-Type", "text/plain")
 
 	if cfg.Gzip {
@@ -65,33 +65,27 @@ func sendData(url, value, name, valueType string) {
 	client := &http.Client{}
 	res, err := client.Do(request)
 	if err != nil {
-		fmt.Printf("error [%v]", err)
-	} else {
-		fmt.Printf("response status [%v]\n", res.Status)
-		fmt.Printf("response headers [%v]\n", res.Header)
-		gzreader, err := gzip.NewReader(res.Body)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		output, err2 := io.ReadAll(gzreader)
-		if err2 != nil {
-			fmt.Println(err2)
-		}
-		fmt.Printf("body [%v]\n\n", string(output))
+		l.Error().Err(err).Msg("agent")
 	}
+
+	var answer []byte
+	if cfg.Gzip {
+		gzreader, _ := gzip.NewReader(res.Body)
+		answer, _ = io.ReadAll(gzreader)
+	} else {
+		answer, _ = io.ReadAll(res.Body)
+	}
+
+	l.Info().Str("answer body", string(answer)).Msg("agent")
 	defer res.Body.Close()
 
 	//************************************************************************************************
-	//var readerInterface = new(reader)
+	// var newReader = newReader(res.Body)
+	// test, _ := io.ReadAll(newReader)
+	// fmt.Printf("TEST BODY [%v]\n\n", string(test))
 
 	//cannot use r (variable of type *gzip.Reader) as reader value in argument to ReadAll: *gzip.Reader does not implement reader (missing method ReadAll)
-	// r, _ := gzip.NewReader(res.Body)
-	// ReadAll(r)
+	//r, _ := gzip.NewReader(res.Body)
+	//ReadAll(r)
 	//************************************************************************************************
 }
-
-// func PackMiddleware(next *bytes.Reader) *bytes.Reader {
-// 	var reader bytes.Reader
-// 	return &reader
-// }
