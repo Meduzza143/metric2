@@ -62,6 +62,7 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, h
 	default:
 		headerStatus = http.StatusBadRequest
 	}
+	defer req.Body.Close()
 	return metric, headerStatus
 }
 
@@ -91,6 +92,7 @@ func (*MetricsJson) Deserialize(req *http.Request) (metric storage.MemStruct, he
 			}
 		}
 	}
+	defer req.Body.Close()
 	return
 }
 

@@ -3,9 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"time"
 
-	"github.com/Meduzza143/metric/internal/logger"
 	"github.com/Meduzza143/metric/internal/server/storage"
 	"github.com/gorilla/mux"
 )
@@ -14,44 +12,20 @@ import (
 			    Сведения о запросах должны содержать URI, метод запроса и время, затраченное на его выполнение.
 	    		Сведения об ответах должны содержать код статуса и размер содержимого ответа.
 */
-func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		l := logger.GetLogger()
-		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")
-		reqStart := time.Now()
-
-		respdata := responseData{
-			status: 0,
-			size:   0,
-		}
-		loggingWriter := loggingResponseWriter{
-			ResponseWriter: w,
-			responseData:   &respdata,
-		}
-
-		//next(w, req)
-		next(&loggingWriter, req) //какого фига это вообще работает ??????????????????????????????????????????????
-
-		l.Info().Int("status", respdata.status).Int("size", respdata.size).Msg("response")
-
-		reqDuration := time.Now().Sub(reqStart)
-		l.Info().Dur("request running time", reqDuration).Msg("request")
-	})
-}
 
 // //http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
 func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	var status int
 	var metric storage.MemStruct
-	var reqIsJson = isJson(*req)
 	var answer []byte
+	var jsonBody MetricsJson
+	var plainBody MetricsPlain
 
+	var reqIsJson = isJson(*req)
 	if reqIsJson {
-		var jsonBody MetricsJson
 		metric, status = jsonBody.Deserialize(req)
 		w.Header().Set("content-type", "application/json")
 	} else {
-		var plainBody MetricsPlain
 		metric, status = plainBody.Deserialize(req)
 		w.Header().Set("content-type", "text/plain")
 	}
@@ -61,15 +35,13 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 		memStorage.SetValue(metric.MetricName, metric)
 
 		if reqIsJson {
-			var jsonBody MetricsJson
 			answer = jsonBody.Serialize(metric)
 		} else {
-			var plainBody MetricsPlain
 			answer = plainBody.Serialize(metric)
 		}
 	}
 
-	ResponseWritter(w, status, answer) //deserialize answer
+	ResponseWritter(w, status, answer)
 }
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {

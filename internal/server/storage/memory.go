@@ -1,5 +1,7 @@
 package storage
 
+import "github.com/Meduzza143/metric/internal/logger"
+
 type MemStruct struct {
 	MetricType string
 	//Value      string
@@ -23,7 +25,10 @@ var storage memStorage = nil
 func (memStorage) SetValue(MetricName string, metric MemStruct) {
 
 	metric.CounterValue = storage[MetricName].CounterValue + metric.CounterValue
+
 	storage[MetricName] = metric
+	l := logger.GetLogger()
+	l.Info().Str("metric", metric.MetricName).Str("type", metric.MetricType).Int64("counter", metric.CounterValue).Float64("gauge", metric.GaugeValue).Msg("set")
 
 }
 

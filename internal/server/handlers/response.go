@@ -21,6 +21,7 @@ type (
 
 func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	size, err := r.ResponseWriter.Write(b)
+	//fmt.Printf("buffer sending test:[%v]", string(b))
 	r.responseData.size += size
 	return size, err
 }

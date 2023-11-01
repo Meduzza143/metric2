@@ -10,7 +10,7 @@ import (
 
 func main() {
 	fmt.Println("starting agent ...")
-	conf := config.GetConfig()
+	cfg := config.GetConfig()
 	data := agent.NewStorage()
 
 	// if conf.CheckConfig() == false {
@@ -19,11 +19,11 @@ func main() {
 	// 	os.Exit(0)
 	// }
 
-	fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", conf.Address, conf.PollInterval, conf.ReportInterval)
+	fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", cfg.Address, cfg.PollInterval, cfg.ReportInterval)
 
-	reportTicker := time.NewTicker(conf.ReportInterval)
+	reportTicker := time.NewTicker(cfg.ReportInterval)
 	fmt.Println("report ticker has been set")
-	pollTicker := time.NewTicker(conf.PollInterval)
+	pollTicker := time.NewTicker(cfg.PollInterval)
 	fmt.Println("poll ticker has been set")
 
 	for {
@@ -35,7 +35,7 @@ func main() {
 			}
 		case <-reportTicker.C:
 			{
-				data.Send(conf.Address)
+				data.Send(cfg.Address)
 				//fmt.Println("report triggered")
 			}
 		}

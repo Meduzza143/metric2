@@ -12,14 +12,24 @@ type Settings struct {
 	//
 	PollInterval   time.Duration
 	ReportInterval time.Duration
+	Gzip           bool
 }
 
-func GetConfig() (c Settings) {
-	c.initConfig()
-	return
+var c *Settings = nil
+
+func GetConfig() Settings {
+	if c == nil {
+		c = new(Settings)
+		c.initConfig()
+	}
+	//c.initConfig()
+	return *c
 }
 
 func (c *Settings) initConfig() {
+
+	c.Gzip = true
+	//c.Gzip = false
 
 	flagAdrPtr := flag.String("a", "localhost:8080", "endpont address:port")
 	flagRepPtr := flag.Int("r", 10, "report interval in seconds")
