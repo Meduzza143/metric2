@@ -8,6 +8,7 @@ import (
 )
 
 func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		l := logger.GetLogger()
 		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")

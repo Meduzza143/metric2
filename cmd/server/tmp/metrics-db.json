@@ -1,1 +1,1 @@
-{"testMetric1":{"MetricType":"gauge","GaugeValue":515,"id":"testMetric1"}}
+{"MCacheSys":{"MetricType":"counter","CounterValue":13,"id":"MCacheSys"},"testMetric1":{"MetricType":"gauge","GaugeValue":515,"id":"testMetric1"}}

@@ -98,14 +98,3 @@ func (s *SaveLoader) SaveAll() {
 		l.Info().Str("saved", "data").Msg("server")
 	}
 }
-
-// func (*MetricsJson) Serialize(metric storage.MemStruct) (data []byte) {
-// 	var mj = jsonData{
-// 		MType: metric.MetricType,
-// 		ID:    metric.MetricName,
-// 		Delta: &metric.CounterValue,
-// 		Value: &metric.GaugeValue,
-// 	}
-// 	data, _ = json.Marshal(mj)
-// 	return data
-// }

@@ -58,14 +58,15 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	//headerStatus := http.StatusNotFound
 	if val.MetricType == vars["type"] {
 		switch val.MetricType {
-		case "gauge", "counter":
-			//ResponseWritter(w, http.StatusOK, fmt.Sprint(val.Value))
-			//ResponseWritter(w, http.StatusOK, fmt.Sprint(val.GaugeValue))
+		case "gauge":
+			ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.GaugeValue)))
+		case "counter":
+			ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.CounterValue)))
 		default:
-			//ResponseWritter(w, headerStatus, "")
+			ResponseWritter(w, http.StatusBadRequest, []byte("type not found"))
 		}
 	} else {
-		//		ResponseWritter(w, headerStatus, "")
+		ResponseWritter(w, http.StatusBadRequest, []byte("metric not found"))
 	}
 }
 
@@ -78,17 +79,15 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 	for k, v := range memStorage.GetAllValues() {
 		switch v.MetricType {
 		case "gauge":
-			//body += fmt.Sprintf("%v = %v \n", k, v.Value)
 			body += fmt.Sprintf("%v = %v \n", k, v.GaugeValue)
 		case "counter":
-			//body += fmt.Sprintf("%v = %v \n", k, v.Value)
 			body += fmt.Sprintf("%v = %v \n", k, v.CounterValue)
 		}
 	}
-	//	ResponseWritter(w, http.StatusOK, body)
+	ResponseWritter(w, http.StatusOK, []byte(body))
 	//
 	// w.WriteHeader(http.StatusOK)
-	//w.Write([]byte(body))
+	// w.Write([]byte(body))
 }
 
 func isJson(r http.Request) bool {
