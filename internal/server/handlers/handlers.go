@@ -3,9 +3,14 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Meduzza143/metric/internal/server/storage"
 )
+
+type RespSettings struct {
+	encoding string
+}
 
 /*
 			    Сведения о запросах должны содержать URI, метод запроса и время, затраченное на его выполнение.
@@ -19,8 +24,11 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	var answer []byte
 	var jsonBody MetricsJson
 	var plainBody MetricsPlain
-
 	var reqIsJson = isJson(*req)
+
+	respSet := RespSettings{}
+	respSet.Init(req)
+
 	if reqIsJson {
 		metric, status = jsonBody.Deserialize(req)
 		w.Header().Set("content-type", "application/json")
@@ -40,7 +48,7 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	ResponseWritter(w, status, answer)
+	ResponseWritter(w, status, answer, respSet)
 
 	//test
 	// s := controllers.GetSaveLoader()
@@ -54,6 +62,9 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	var answer []byte
 	var jsonBody MetricsJson
 	var plainBody MetricsPlain
+
+	respSet := RespSettings{}
+	respSet.Init(req)
 
 	var reqIsJson = isJson(*req)
 	if reqIsJson {
@@ -81,10 +92,13 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	}
 	//}
 
-	ResponseWritter(w, status, answer)
+	ResponseWritter(w, status, answer, respSet)
 }
 
 func GetAll(w http.ResponseWriter, req *http.Request) {
+	respSet := RespSettings{}
+	respSet.Init(req)
+
 	memStorage := storage.GetInstance()
 	w.Header().Set("content-type", "text/plain")
 
@@ -98,7 +112,7 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 			body += fmt.Sprintf("%v = %v \n", k, v.CounterValue)
 		}
 	}
-	ResponseWritter(w, http.StatusOK, []byte(body))
+	ResponseWritter(w, http.StatusOK, []byte(body), respSet)
 	//
 	// w.WriteHeader(http.StatusOK)
 	// w.Write([]byte(body))
@@ -109,4 +123,10 @@ func isJson(r http.Request) bool {
 		return true
 	}
 	return false
+}
+
+func (r *RespSettings) Init(req *http.Request) {
+	if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
+		r.encoding = "gzip"
+	}
 }

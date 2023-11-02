@@ -60,6 +60,7 @@ func sendData(url, value, name, valueType string) {
 
 	if cfg.Gzip {
 		request.Header.Set("Content-Encoding", "gzip")
+		request.Header.Set("Content-Decoding", "gzip")
 	}
 
 	client := &http.Client{}
@@ -78,14 +79,4 @@ func sendData(url, value, name, valueType string) {
 
 	l.Info().Str("answer body", string(answer)).Msg("agent")
 	defer res.Body.Close()
-
-	//************************************************************************************************
-	// var newReader = newReader(res.Body)
-	// test, _ := io.ReadAll(newReader)
-	// fmt.Printf("TEST BODY [%v]\n\n", string(test))
-
-	//cannot use r (variable of type *gzip.Reader) as reader value in argument to ReadAll: *gzip.Reader does not implement reader (missing method ReadAll)
-	//r, _ := gzip.NewReader(res.Body)
-	//ReadAll(r)
-	//************************************************************************************************
 }

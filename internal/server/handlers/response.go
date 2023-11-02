@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"compress/gzip"
 	"net/http"
 
 	"github.com/Meduzza143/metric/internal/logger"
@@ -31,11 +33,26 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func ResponseWritter(w http.ResponseWriter, status int, data []byte) {
+func ResponseWritter(w http.ResponseWriter, status int, data []byte, settings RespSettings) {
 
 	l := logger.GetLogger()
 	l.Info().Int("status", status).Int("body size", len(data)).Msg("response")
 
+	var answer []byte
+	if settings.encoding == "gzip" {
+		var buf bytes.Buffer
+		gzwriter := gzip.NewWriter(&buf)
+		gzwriter.Write(data)
+		gzwriter.Close()
+		answer = buf.Bytes()
+	} else {
+		answer = data
+	}
+
+	// else {
+	// 	answer, _ = io.ReadAll(data)
+	// }
+
 	w.WriteHeader(status)
-	w.Write(data)
+	w.Write(answer)
 }

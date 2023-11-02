@@ -43,8 +43,8 @@ func (wr *WrappedWriter) Flush() {
 func UnpackMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		l := logger.GetLogger()
-		if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
-			l.Info().Str("Content-Decoding", "gzip").Msg("Content-Encoding")
+		if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
+			l.Info().Str("Content-Encoding", "gzip").Msg("Content-Encoding")
 			//gzipWriter := new(WrappedWriter)
 			gzipWriter := newWriter(w)
 
