@@ -20,11 +20,11 @@ type MetricsJson struct {
 
 type MetricsPlain http.Request //Переопределим тушку реквеста чтобы использовать интерфейс
 
-type DataExchanger interface {
-	Deserialize() (storage.MemStruct, int)
-	Serialize(storage.MemStruct) []byte
-	SerializeAll() []byte
-}
+// type DataExchanger interface {
+// 	Deserialize() (storage.MemStruct, int)
+// 	Serialize(storage.MemStruct) []byte
+// 	SerializeAll() []byte
+// }
 
 func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, headerStatus int) {
 	vars := mux.Vars(req)
@@ -75,20 +75,32 @@ func (*MetricsJson) Deserialize(req *http.Request) (metric storage.MemStruct, he
 		if json.Unmarshal(body, &mj) == nil { //if errror == nil
 			metric = storage.MemStruct{}
 			switch mj.MType {
-			case "gauge":
+			case "gauge", "counter":
 				{
 					metric.MetricName = mj.ID
 					metric.MetricType = mj.MType
-					metric.GaugeValue = *mj.Value
+					if mj.Value != nil {
+						metric.GaugeValue = *mj.Value
+					}
+					if mj.Delta != nil {
+						metric.CounterValue = *mj.Delta
+					}
 					headerStatus = http.StatusOK
 				}
-			case "counter":
-				{
-					metric.MetricName = mj.ID
-					metric.MetricType = mj.MType
-					metric.CounterValue = *mj.Delta
-					headerStatus = http.StatusOK
-				}
+				// case "gauge":
+				// 	{
+				// 		metric.MetricName = mj.ID
+				// 		metric.MetricType = mj.MType
+				// 		metric.GaugeValue = *mj.Value
+				// 		headerStatus = http.StatusOK
+				// 	}
+				// case "counter":
+				// 	{
+				// 		metric.MetricName = mj.ID
+				// 		metric.MetricType = mj.MType
+				// 		metric.CounterValue = *mj.Delta
+				// 		headerStatus = http.StatusOK
+				// 	}
 			}
 		}
 	}

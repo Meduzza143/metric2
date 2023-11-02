@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/Meduzza143/metric/internal/server/storage"
-	"github.com/gorilla/mux"
 )
 
 /*
@@ -50,23 +49,57 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
 
-	w.Header().Set("content-type", "text/plain")
-	memStorage := storage.GetInstance()
-	vars := mux.Vars(req)
-	val := memStorage.GetValue(vars["name"])
-	//headerStatus := http.StatusNotFound
-	if val.MetricType == vars["type"] {
-		switch val.MetricType {
-		case "gauge":
-			ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.GaugeValue)))
-		case "counter":
-			ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.CounterValue)))
-		default:
-			ResponseWritter(w, http.StatusNotFound, []byte("type not found"))
+	var status int
+	var metric storage.MemStruct
+	var answer []byte
+	var jsonBody MetricsJson
+	var plainBody MetricsPlain
+
+	var reqIsJson = isJson(*req)
+	if reqIsJson {
+		metric, status = jsonBody.Deserialize(req)
+		w.Header().Set("content-type", "application/json")
+	} else {
+		metric, status = plainBody.Deserialize(req)
+		w.Header().Set("content-type", "text/plain")
+	}
+
+	if status == http.StatusOK { //ok
+		memStorage := storage.GetInstance()
+		//memStorage.SetValue(metric.MetricName, metric)
+		val := memStorage.GetValue(metric.MetricName)
+		if val.MetricType == metric.MetricType {
+			if reqIsJson {
+				answer = jsonBody.Serialize(metric)
+			} else {
+				answer = plainBody.Serialize(metric)
+			}
+		} else {
+			status = http.StatusNotFound
 		}
 	} else {
-		ResponseWritter(w, http.StatusNotFound, []byte("metric not found"))
+		status = http.StatusNotFound
 	}
+
+	ResponseWritter(w, status, answer)
+
+	// w.Header().Set("content-type", "text/plain")
+	// memStorage := storage.GetInstance()
+	// vars := mux.Vars(req)
+	// val := memStorage.GetValue(vars["name"])
+	// //headerStatus := http.StatusNotFound
+	// if val.MetricType == vars["type"] {
+	// 	switch val.MetricType {
+	// 	case "gauge":
+	// 		ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.GaugeValue)))
+	// 	case "counter":
+	// 		ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.CounterValue)))
+	// 	default:
+	// 		ResponseWritter(w, http.StatusNotFound, []byte("type not found"))
+	// 	}
+	// } else {
+	// 	ResponseWritter(w, http.StatusNotFound, []byte("metric not found"))
+	// }
 }
 
 func GetAll(w http.ResponseWriter, req *http.Request) {
