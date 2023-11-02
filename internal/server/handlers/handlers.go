@@ -69,9 +69,11 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	val := memStorage.GetValue(metric.MetricName)
 	if val.MetricType == metric.MetricType {
 		if reqIsJson {
-			answer = jsonBody.Serialize(metric)
+			//answer = jsonBody.Serialize(metric)
+			answer = jsonBody.Serialize(val)
 		} else {
-			answer = plainBody.Serialize(metric)
+			//answer = plainBody.Serialize(metric)
+			answer = plainBody.Serialize(val)
 		}
 		status = http.StatusOK
 	} else {

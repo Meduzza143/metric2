@@ -98,9 +98,11 @@ func (*MetricsJson) Serialize(metric storage.MemStruct) (data []byte) {
 func (*MetricsPlain) Serialize(metric storage.MemStruct) (data []byte) {
 	switch metric.MetricType {
 	case "gauge":
-		data = []byte(fmt.Sprintf("%v = %v \n", metric.MetricName, metric.GaugeValue))
+		//data = []byte(fmt.Sprintf("%v = %v \n", metric.MetricName, metric.GaugeValue))
+		data = []byte(fmt.Sprintf("%v", metric.GaugeValue))
 	case "counter":
-		data = []byte(fmt.Sprintf("%v = %v \n", metric.MetricName, metric.CounterValue))
+		//data = []byte(fmt.Sprintf("%v = %v \n", metric.MetricName, metric.CounterValue))
+		data = []byte(fmt.Sprintf("%v", metric.CounterValue))
 	}
 	return
 }
