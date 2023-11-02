@@ -66,7 +66,6 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 
 	if status == http.StatusOK { //ok
 		memStorage := storage.GetInstance()
-		//memStorage.SetValue(metric.MetricName, metric)
 		val := memStorage.GetValue(metric.MetricName)
 		if val.MetricType == metric.MetricType {
 			if reqIsJson {
@@ -82,24 +81,6 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	}
 
 	ResponseWritter(w, status, answer)
-
-	// w.Header().Set("content-type", "text/plain")
-	// memStorage := storage.GetInstance()
-	// vars := mux.Vars(req)
-	// val := memStorage.GetValue(vars["name"])
-	// //headerStatus := http.StatusNotFound
-	// if val.MetricType == vars["type"] {
-	// 	switch val.MetricType {
-	// 	case "gauge":
-	// 		ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.GaugeValue)))
-	// 	case "counter":
-	// 		ResponseWritter(w, http.StatusOK, []byte(fmt.Sprint(val.CounterValue)))
-	// 	default:
-	// 		ResponseWritter(w, http.StatusNotFound, []byte("type not found"))
-	// 	}
-	// } else {
-	// 	ResponseWritter(w, http.StatusNotFound, []byte("metric not found"))
-	// }
 }
 
 func GetAll(w http.ResponseWriter, req *http.Request) {

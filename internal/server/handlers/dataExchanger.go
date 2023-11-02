@@ -28,40 +28,69 @@ type MetricsPlain http.Request //Переопределим тушку рекв�
 
 func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, headerStatus int) {
 	vars := mux.Vars(req)
-	headerStatus = http.StatusNotFound
+	//headerStatus = http.StatusNotFound
+	headerStatus = http.StatusOK
 
-	if vars["name"] == "" {
-		return
-	}
+	// if vars["name"] == "" {
+	// 	return
+	// }
+	metric = storage.MemStruct{}
+	metric.MetricType = vars["type"]
+	metric.MetricName = vars["name"]
 
 	switch vars["type"] { //gauge : float64, counter: int64
 	case "gauge":
-		value, err := strconv.ParseFloat(vars["value"], 64) //оставим проверку на тип
-		if err == nil {
-			metric = storage.MemStruct{
-				MetricType: vars["type"],
-				GaugeValue: value,
-				MetricName: vars["name"],
+		{
+			value, err := strconv.ParseFloat(vars["value"], 64) //оставим проверку на тип
+			if err == nil {
+				metric.GaugeValue = value
 			}
-			headerStatus = http.StatusOK
-		} else {
-			headerStatus = http.StatusBadRequest
+			// else {
+			// 	headerStatus = http.StatusBadRequest
+			// }
 		}
 	case "counter":
-		value, err := strconv.ParseInt(vars["value"], 10, 64) //оставим проверку на тип
-		if err == nil {
-			metric = storage.MemStruct{
-				MetricType:   vars["type"],
-				CounterValue: value,
-				MetricName:   vars["name"],
+		{
+			value, err := strconv.ParseInt(vars["value"], 10, 64) //оставим проверку на тип
+			if err == nil {
+				metric.CounterValue = value
 			}
-			headerStatus = http.StatusOK
-		} else {
-			headerStatus = http.StatusBadRequest
+			// else {
+			// 	headerStatus = http.StatusBadRequest
+			// }
 		}
 	default:
-		headerStatus = http.StatusBadRequest
+		{
+			headerStatus = http.StatusBadRequest
+		}
 	}
+	// case "gauge":
+	// 	value, err := strconv.ParseFloat(vars["value"], 64) //оставим проверку на тип
+	// 	if err == nil {
+	// 		metric = storage.MemStruct{
+	// 			MetricType: vars["type"],
+	// 			GaugeValue: value,
+	// 			MetricName: vars["name"],
+	// 		}
+	// 		headerStatus = http.StatusOK
+	// 	} else {
+	// 		headerStatus = http.StatusBadRequest
+	// 	}
+	// case "counter":
+	// 	value, err := strconv.ParseInt(vars["value"], 10, 64) //оставим проверку на тип
+	// 	if err == nil {
+	// 		metric = storage.MemStruct{
+	// 			MetricType:   vars["type"],
+	// 			CounterValue: value,
+	// 			MetricName:   vars["name"],
+	// 		}
+	// 		headerStatus = http.StatusOK
+	// 	} else {
+	// 		headerStatus = http.StatusBadRequest
+	// 	}
+	// default:
+	// 	headerStatus = http.StatusBadRequest
+	// }
 	defer req.Body.Close()
 	return metric, headerStatus
 }
