@@ -76,8 +76,6 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 		} else {
 			status = http.StatusNotFound
 		}
-	} else {
-		status = http.StatusNotFound
 	}
 
 	ResponseWritter(w, status, answer)
