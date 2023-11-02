@@ -64,19 +64,20 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("content-type", "text/plain")
 	}
 
-	if status == http.StatusOK { //ok
-		memStorage := storage.GetInstance()
-		val := memStorage.GetValue(metric.MetricName)
-		if val.MetricType == metric.MetricType {
-			if reqIsJson {
-				answer = jsonBody.Serialize(metric)
-			} else {
-				answer = plainBody.Serialize(metric)
-			}
+	//if status == http.StatusOK { //ok
+	memStorage := storage.GetInstance()
+	val := memStorage.GetValue(metric.MetricName)
+	if val.MetricType == metric.MetricType {
+		if reqIsJson {
+			answer = jsonBody.Serialize(metric)
 		} else {
-			status = http.StatusNotFound
+			answer = plainBody.Serialize(metric)
 		}
+		status = http.StatusOK
+	} else {
+		status = http.StatusNotFound
 	}
+	//}
 
 	ResponseWritter(w, status, answer)
 }
