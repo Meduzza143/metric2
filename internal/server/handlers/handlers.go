@@ -32,11 +32,11 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	if status == http.StatusOK { //ok
 		memStorage := storage.GetInstance()
 		memStorage.SetValue(metric.MetricName, metric)
-
+		val := memStorage.GetValue(metric.MetricName)
 		if reqIsJson {
-			answer = jsonBody.Serialize(metric)
+			answer = jsonBody.Serialize(val)
 		} else {
-			answer = plainBody.Serialize(metric)
+			answer = plainBody.Serialize(val)
 		}
 	}
 
