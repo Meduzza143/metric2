@@ -54,8 +54,12 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		status = metric.Check()
 		if status == http.StatusOK {
-			val := memStorage.GetValue(metric)
-			answer = prepareAnswer(val)
+			if metric.IsExist() {
+				val := memStorage.GetValue(metric)
+				answer = prepareAnswer(val)
+			} else {
+				status = http.StatusNotFound
+			}
 		} else {
 			answer = []byte("something went wrong")
 		}

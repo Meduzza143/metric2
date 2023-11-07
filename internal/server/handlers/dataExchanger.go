@@ -43,21 +43,13 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, e
 	switch vars["type"] { //gauge : float64, counter: int64
 	case "gauge":
 		{
-			value, err := strconv.ParseFloat(vars["value"], 64) //оставим проверку на тип
-			if err == nil {
-				metric.GaugeValue = value
-			} else {
-				er = err
-			}
+			value, _ := strconv.ParseFloat(vars["value"], 64)
+			metric.GaugeValue = value
 		}
 	case "counter":
 		{
-			value, err := strconv.ParseInt(vars["value"], 10, 64) //оставим проверку на тип
-			if err == nil {
-				metric.CounterValue = value
-			} else {
-				er = err
-			}
+			value, _ := strconv.ParseInt(vars["value"], 10, 64)
+			metric.CounterValue = value
 		}
 	}
 	defer req.Body.Close()
@@ -66,6 +58,7 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, e
 
 func (*MetricsJson) Deserialize(req *http.Request) (metric storage.MemStruct, er error) {
 	var mj MetricsJson
+	er = nil
 	//err = nil
 	body, err := io.ReadAll(req.Body)
 	if err == nil {

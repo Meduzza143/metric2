@@ -54,7 +54,7 @@ func (memStorage) GetValue(val MemStruct) (answer MemStruct) {
 	return
 }
 
-func checkName(metric MemStruct) (status int) {
+func (metric MemStruct) CheckName() (status int) {
 	//при успешном приёме возвращать http.StatusOK.
 	status = http.StatusOK
 	//При попытке передать запрос без имени метрики возвращать http.StatusNotFound.
@@ -64,21 +64,34 @@ func checkName(metric MemStruct) (status int) {
 	return
 }
 
-func checkType(metric MemStruct) (status int) {
+func (metric MemStruct) checkType() (status int) {
 	//при успешном приёме возвращать http.StatusOK.
 	//При попытке передать запрос с некорректным типом метрики или значением возвращать http.StatusBadRequest
 	status = http.StatusOK
-	currItem := storage[metric.MetricName]
-	if currItem.MetricType != metric.MetricType {
+	switch metric.MetricType {
+	case "gauge", "counter":
+	default:
 		status = http.StatusBadRequest
 	}
+	// currItem := storage[metric.MetricName]
+	// if currItem.MetricType != metric.MetricType {
+	// 	status = http.StatusBadRequest
+	// }
 	return
 }
 
 func (m MemStruct) Check() (status int) {
-	status = checkType(m)
+	status = m.checkType()
 	if status == http.StatusOK {
-		status = checkName(m)
+		status = m.CheckName()
 	}
 	return
+}
+
+func (m MemStruct) IsExist() bool {
+	currItem := storage[m.MetricName]
+	if currItem.MetricType != m.MetricType {
+		return false
+	}
+	return true
 }
