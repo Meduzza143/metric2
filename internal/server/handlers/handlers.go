@@ -38,6 +38,7 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	//if err == nil {
 	status = metric.Check()
 	if status == http.StatusOK { //ok
+
 		memStorage.SetValue(&metric)
 		answer = prepareAnswer(metric)
 	} else {
@@ -54,9 +55,14 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
 	respSet.Init(req)
+	var typeErr error = nil
+	if respSet.contentType != "json" { //plain text only
+		typeErr = plainValuesCheck(req)
+	}
 	metric, err := prepareRequest(w, req)
-	if err == nil {
+	if (err == nil) && (typeErr == nil) {
 		status = metric.Check()
+
 		if status == http.StatusOK {
 			if metric.IsExist() {
 				val := memStorage.GetValue(metric)
@@ -126,10 +132,6 @@ func prepareRequest(w http.ResponseWriter, req *http.Request) (metric storage.Me
 		metric, err = jsonBody.Deserialize(req)
 		//w.Header().Set("content-type", "application/json")
 	} else {
-		er := plainValuesCheck(req)
-		if er != nil {
-			return
-		}
 		metric, err = plainBody.Deserialize(req)
 		//w.Header().Set("content-type", "text/plain")
 	}
