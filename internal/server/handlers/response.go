@@ -39,6 +39,7 @@ func ResponseWritter(w http.ResponseWriter, status int, data []byte, settings Re
 	var answer []byte
 	if settings.acceptEncoding == "gzip" {
 		answer = zipper.GzipBytes(data)
+		w.Header().Set("Content-Encoding", "gzip")
 	} else {
 		answer = data
 	}

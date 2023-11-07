@@ -4,8 +4,6 @@ import (
 	"compress/gzip"
 	"net/http"
 	"strings"
-
-	"github.com/Meduzza143/metric/internal/logger"
 )
 
 /*
@@ -19,9 +17,9 @@ import (
 
 func UnpackMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		l := logger.GetLogger()
+		//l := logger.GetLogger()
 		if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
-			l.Info().Str("Content-Encoding", "gzip").Msg("Content-Encoding")
+			//l.Info().Str("Content-Encoding", "gzip").Msg("Content-Encoding")
 
 			gzReader, err := gzip.NewReader(req.Body)
 			if err != nil {

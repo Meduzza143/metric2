@@ -69,8 +69,7 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	respSet := RespSettings{}
 	respSet.Init(req)
 
-	var reqIsJson = isJson(*req)
-	if reqIsJson {
+	if respSet.format == "json" {
 		metric, status = jsonBody.Deserialize(req)
 		w.Header().Set("content-type", "application/json")
 	} else {
@@ -121,12 +120,12 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 	ResponseWritter(w, http.StatusOK, []byte(body), respSet)
 }
 
-func isJson(r http.Request) bool {
-	if r.Header.Get("Content-Type") == "application/json" {
-		return true
-	}
-	return false
-}
+// func isJson(r http.Request) bool {
+// 	if r.Header.Get("Content-Type") == "application/json" {
+// 		return true
+// 	}
+// 	return false
+// }
 
 func (r *RespSettings) Init(req *http.Request) {
 	if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
@@ -134,5 +133,8 @@ func (r *RespSettings) Init(req *http.Request) {
 	}
 	if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
 		r.contentEncoding = "gzip"
+	}
+	if strings.Contains(req.Header.Get("Content-Type"), "application/json") {
+		r.format = "json"
 	}
 }

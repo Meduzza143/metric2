@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	config "github.com/Meduzza143/metric/internal/agent/config"
 	"github.com/Meduzza143/metric/internal/logger"
@@ -38,12 +39,12 @@ func sendData(url, value, name, valueType string) {
 		zippeddata := zipper.GzipBytes(mockData) //zipper.GzipBytes(request.Body)
 		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(zippeddata))
 		request.Header.Set("Content-Encoding", "gzip")
-		request.Header.Set("Accept-Encoding", "gzip")
 	} else {
 		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(mockData))
 		request.Header.Set("Content-Type", "text/plain")
-		request.Header.Set("Accept-Encoding", "identity")
+		//request.Header.Set("Accept-Encoding", "identity")
 	}
+	request.Header.Set("Accept-Encoding", "gzip")
 
 	client := &http.Client{}
 	res, err := client.Do(request)
@@ -53,7 +54,7 @@ func sendData(url, value, name, valueType string) {
 
 	var answer []byte
 	answer, _ = io.ReadAll(res.Body)
-	if cfg.Gzip {
+	if strings.Contains(res.Header.Get("Content-Encoding"), "gzip") {
 		answer = zipper.UnGzipBytes(answer)
 	}
 
