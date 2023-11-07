@@ -2,37 +2,14 @@ package agent
 
 import (
 	"bytes"
-	"compress/gzip"
 	"fmt"
 	"io"
 	"net/http"
 
 	config "github.com/Meduzza143/metric/internal/agent/config"
 	"github.com/Meduzza143/metric/internal/logger"
+	"github.com/Meduzza143/metric/internal/zipper"
 )
-
-// type reader interface {
-// 	ReadAll() ([]byte, error)
-// 	Read([]byte) (int, error)
-// }
-
-// type readerGzip struct {
-// 	rz *gzip.Reader
-// 	r  *io.Reader
-// }
-
-// func (rg *readerGzip) ReadAll() ([]byte, error) {
-// 	return io.ReadAll(rg.rz)
-// }
-
-// func (rg *readerGzip) Read(data []byte) (int, error) {
-// 	return rg.rz.Read(data)
-// }
-
-// func newReader(rw io.Reader) *readerGzip {
-// 	gr, _ := gzip.NewReader(rw)
-// 	return &readerGzip{gr, &rw}
-// }
 
 func (storage MemStorage) Send(url string) {
 	for k, v := range storage {
@@ -55,12 +32,17 @@ func sendData(url, value, name, valueType string) {
 	}
 	`)
 
-	request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(mockData))
-	request.Header.Set("Content-Type", "text/plain")
+	//cfg.Gzip = true //TEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	if cfg.Gzip {
+		zippeddata := zipper.GzipBytes(mockData) //zipper.GzipBytes(request.Body)
+		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(zippeddata))
 		request.Header.Set("Content-Encoding", "gzip")
-		request.Header.Set("Content-Decoding", "gzip")
+		request.Header.Set("Accept-Encoding", "gzip")
+	} else {
+		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(mockData))
+		request.Header.Set("Content-Type", "text/plain")
+		request.Header.Set("Accept-Encoding", "identity")
 	}
 
 	client := &http.Client{}
@@ -70,13 +52,11 @@ func sendData(url, value, name, valueType string) {
 	}
 
 	var answer []byte
+	answer, _ = io.ReadAll(res.Body)
 	if cfg.Gzip {
-		gzreader, _ := gzip.NewReader(res.Body)
-		answer, _ = io.ReadAll(gzreader)
-	} else {
-		answer, _ = io.ReadAll(res.Body)
+		answer = zipper.UnGzipBytes(answer)
 	}
 
-	l.Info().Str("answer body", string(answer)).Msg("agent")
+	l.Debug().Str("answer body", string(answer)).Msg("agent")
 	defer res.Body.Close()
 }

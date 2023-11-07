@@ -59,6 +59,7 @@ func (s *SaveLoader) Run() {
 
 func (s *SaveLoader) Stop() {
 	s.keepRunning = false
+	s.SaveAll()
 	l := logger.GetLogger()
 	l.Info().Str("Stopping", "save loader").Msg("server")
 }

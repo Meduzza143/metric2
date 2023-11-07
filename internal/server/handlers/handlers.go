@@ -9,7 +9,9 @@ import (
 )
 
 type RespSettings struct {
-	encoding string
+	contentEncoding string
+	acceptEncoding  string
+	format          string
 }
 
 /*
@@ -24,12 +26,12 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	var answer []byte
 	var jsonBody MetricsJson
 	var plainBody MetricsPlain
-	var reqIsJson = isJson(*req)
+	//var reqIsJson = isJson(*req)
 
 	respSet := RespSettings{}
 	respSet.Init(req)
 
-	if reqIsJson {
+	if respSet.format == "json" {
 		metric, status = jsonBody.Deserialize(req)
 		w.Header().Set("content-type", "application/json")
 	} else {
@@ -41,18 +43,19 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 		memStorage := storage.GetInstance()
 		memStorage.SetValue(metric.MetricName, metric)
 		val := memStorage.GetValue(metric.MetricName)
-		if reqIsJson {
-			answer = jsonBody.Serialize(val)
-		} else {
-			answer = plainBody.Serialize(val)
+		switch respSet.format {
+		case "json":
+			{
+				answer = jsonBody.Serialize(val)
+			}
+		default:
+			{
+				answer = plainBody.Serialize(val)
+			}
 		}
 	}
 
 	ResponseWritter(w, status, answer, respSet)
-
-	//test
-	// s := controllers.GetSaveLoader()
-	// s.SaveAll()
 }
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
@@ -79,12 +82,15 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	memStorage := storage.GetInstance()
 	val := memStorage.GetValue(metric.MetricName)
 	if val.MetricType == metric.MetricType {
-		if reqIsJson {
-			//answer = jsonBody.Serialize(metric)
-			answer = jsonBody.Serialize(val)
-		} else {
-			//answer = plainBody.Serialize(metric)
-			answer = plainBody.Serialize(val)
+		switch respSet.format {
+		case "json":
+			{
+				answer = jsonBody.Serialize(val)
+			}
+		default:
+			{
+				answer = plainBody.Serialize(val)
+			}
 		}
 		status = http.StatusOK
 	} else {
@@ -103,7 +109,7 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("content-type", "text/plain")
 
 	body := "Current values: \n"
-	//fmt.Println(memStorage.GetAllValues())
+
 	for k, v := range memStorage.GetAllValues() {
 		switch v.MetricType {
 		case "gauge":
@@ -113,9 +119,6 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	ResponseWritter(w, http.StatusOK, []byte(body), respSet)
-	//
-	// w.WriteHeader(http.StatusOK)
-	// w.Write([]byte(body))
 }
 
 func isJson(r http.Request) bool {
@@ -127,6 +130,9 @@ func isJson(r http.Request) bool {
 
 func (r *RespSettings) Init(req *http.Request) {
 	if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
-		r.encoding = "gzip"
+		r.acceptEncoding = "gzip"
+	}
+	if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
+		r.contentEncoding = "gzip"
 	}
 }
