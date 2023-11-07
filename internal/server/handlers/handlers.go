@@ -50,7 +50,7 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	status = metric.Check()
 	if status == http.StatusOK { //ok
 		memStorage.SetValue(&metric)
-		answer = prepareAnswer(metric)
+		answer = prepareAnswer(w, metric)
 	} else {
 		answer = []byte("something went wrong")
 	}
@@ -73,7 +73,7 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 		if status == http.StatusOK {
 			if metric.IsExist() {
 				val := memStorage.GetValue(metric)
-				answer = prepareAnswer(val)
+				answer = prepareAnswer(w, val)
 			} else {
 				status = http.StatusNotFound
 			}
@@ -119,12 +119,13 @@ func (r *RespSettings) Init(req *http.Request) {
 	}
 }
 
-func prepareAnswer(val storage.MemStruct) (answer []byte) {
+func prepareAnswer(w http.ResponseWriter, val storage.MemStruct) (answer []byte) {
 
 	switch respSet.acceptFormat {
 	case "json":
 		{
 			answer = Serialize(&jsonBody, val)
+			w.Header().Set("Content-Type", "application/json")
 		}
 	default:
 		{
@@ -137,7 +138,7 @@ func prepareAnswer(val storage.MemStruct) (answer []byte) {
 func prepareRequest(w http.ResponseWriter, req *http.Request) (metric storage.MemStruct, err error) {
 	if respSet.contentType == "json" {
 		metric, err = jsonBody.Deserialize(req)
-		//w.Header().Set("content-type", "application/json")
+
 	} else {
 		metric, err = plainBody.Deserialize(req)
 		//w.Header().Set("content-type", "text/plain")
