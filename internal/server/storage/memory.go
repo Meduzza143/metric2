@@ -95,3 +95,7 @@ func (m MemStruct) IsExist() bool {
 	}
 	return true
 }
+
+// func (m MemStruct) CheckValue() (status int) {
+
+// }

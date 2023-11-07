@@ -32,18 +32,18 @@ var memStorage = storage.GetInstance()
 func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 	respSet.Init(req)
-	metric, err := prepareRequest(w, req)
-	if err == nil {
-		status = metric.Check()
-		if status == http.StatusOK { //ok
-			memStorage.SetValue(metric.MetricName, metric)
-			answer = prepareAnswer(metric)
-		} else {
-			answer = []byte("something went wrong")
-		}
+	metric, _ := prepareRequest(w, req)
+	//if err == nil {
+	status = metric.Check()
+	if status == http.StatusOK { //ok
+		memStorage.SetValue(metric.MetricName, metric)
+		answer = prepareAnswer(metric)
 	} else {
-		status = http.StatusBadRequest
+		answer = []byte("something went wrong")
 	}
+	// } else {
+	// 	status = http.StatusBadRequest
+	// }
 
 	ResponseWritter(w, status, answer, respSet)
 }

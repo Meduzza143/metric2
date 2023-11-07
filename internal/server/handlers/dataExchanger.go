@@ -43,12 +43,18 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, e
 	switch vars["type"] { //gauge : float64, counter: int64
 	case "gauge":
 		{
-			value, _ := strconv.ParseFloat(vars["value"], 64)
+			value, err := strconv.ParseFloat(vars["value"], 64)
+			if err != nil {
+				er = err
+			}
 			metric.GaugeValue = value
 		}
 	case "counter":
 		{
-			value, _ := strconv.ParseInt(vars["value"], 10, 64)
+			value, err := strconv.ParseInt(vars["value"], 10, 64)
+			if err != nil {
+				er = err
+			}
 			metric.CounterValue = value
 		}
 	}

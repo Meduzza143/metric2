@@ -1,1 +1,1 @@
-{"testGauge":{"MetricType":"gauge","GaugeValue":100,"id":"testGauge"},"testMetric1":{"MetricType":"counter","CounterValue":515,"id":"testMetric1"},"testSetGet73":{"MetricType":"counter","CounterValue":148,"id":"testSetGet73"}}
+{"testCounter":{"MetricType":"counter","id":"testCounter"},"testGauge":{"MetricType":"gauge","GaugeValue":100,"id":"testGauge"},"testMetric1":{"MetricType":"counter","CounterValue":515,"id":"testMetric1"},"testSetGet73":{"MetricType":"counter","CounterValue":148,"id":"testSetGet73"}}
