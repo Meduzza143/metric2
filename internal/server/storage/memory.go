@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/Meduzza143/metric/internal/logger"
+import (
+	"net/http"
+
+	"github.com/Meduzza143/metric/internal/logger"
+)
 
 type MemStruct struct {
 	MetricType string `json:"MetricType"`
@@ -38,9 +42,16 @@ func (memStorage) GetAllValues() memStorage {
 	return storage
 }
 
-func (memStorage) GetValue(key string) MemStruct {
-	//fmt.Printf("getting value [%v]\n ", storage[key])
-	return storage[key]
+func (memStorage) GetValue(val MemStruct) (answer MemStruct, status int) {
+
+	currItem := storage[val.MetricName]
+	if currItem.MetricType == val.MetricType {
+		answer = currItem
+		status = http.StatusOK
+	} else {
+		status = http.StatusNotFound
+	}
+	return
 }
 
 func GetInstance() memStorage {

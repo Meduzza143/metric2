@@ -46,27 +46,28 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
 	respSet.Init(req)
-	metric, status = prepareRequest(w, req)
-	if status == http.StatusOK {
-		val := memStorage.GetValue(metric.MetricName)
+	metric, _ = prepareRequest(w, req)
+	val, status := memStorage.GetValue(metric)
+	if status != http.StatusNotFound {
 		answer, status = prepareAnswer(val)
 	} else {
 		answer = []byte("something went wrong")
 	}
+
 	ResponseWritter(w, status, answer, respSet)
 }
 
 func GetAll(w http.ResponseWriter, req *http.Request) {
 	respSet.Init(req)
-	metric, status = prepareRequest(w, req)
+	//metric, status = prepareRequest(w, req)
 
 	body := ""
 	for k, v := range memStorage.GetAllValues() {
 		switch v.MetricType {
 		case "gauge":
-			body += fmt.Sprintf("%v = %v \n", k, v.GaugeValue)
+			body += fmt.Sprintf("[%v] %v = %v \n", v.MetricType, k, v.GaugeValue)
 		case "counter":
-			body += fmt.Sprintf("%v = %v \n", k, v.CounterValue)
+			body += fmt.Sprintf("[%v] %v = %v \n", v.MetricType, k, v.CounterValue)
 		}
 	}
 	ResponseWritter(w, http.StatusOK, []byte(body), respSet)

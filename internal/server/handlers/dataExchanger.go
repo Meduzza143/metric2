@@ -62,7 +62,7 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, h
 		}
 	default:
 		{
-			headerStatus = http.StatusBadRequest
+			headerStatus = http.StatusNotFound
 		}
 	}
 	defer req.Body.Close()
@@ -71,7 +71,7 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, h
 
 func (*MetricsJson) Deserialize(req *http.Request) (metric storage.MemStruct, headerStatus int) {
 	var mj MetricsJson
-	headerStatus = http.StatusBadRequest
+	headerStatus = http.StatusNotFound
 
 	body, err := io.ReadAll(req.Body)
 	if err == nil {
