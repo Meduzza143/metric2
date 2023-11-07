@@ -3,9 +3,11 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/Meduzza143/metric/internal/server/storage"
+	"github.com/gorilla/mux"
 )
 
 type RespSettings struct {
@@ -120,8 +122,34 @@ func prepareRequest(w http.ResponseWriter, req *http.Request) (metric storage.Me
 		metric, err = jsonBody.Deserialize(req)
 		//w.Header().Set("content-type", "application/json")
 	} else {
+		er := plainValuesCheck(req)
+		if er != nil {
+			return
+		}
 		metric, err = plainBody.Deserialize(req)
 		//w.Header().Set("content-type", "text/plain")
+	}
+	return
+}
+
+func plainValuesCheck(req *http.Request) (er error) {
+	er = nil
+	vars := mux.Vars(req)
+	switch vars["type"] {
+	case "gauge":
+		{
+			_, err := strconv.ParseFloat(vars["value"], 64)
+			if err != nil {
+				er = err
+			}
+		}
+	case "counter":
+		{
+			_, err := strconv.ParseInt(vars["value"], 10, 64)
+			if err != nil {
+				er = err
+			}
+		}
 	}
 	return
 }
