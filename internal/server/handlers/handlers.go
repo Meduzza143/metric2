@@ -38,7 +38,7 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	//if err == nil {
 	status = metric.Check()
 	if status == http.StatusOK { //ok
-		memStorage.SetValue(metric.MetricName, metric)
+		memStorage.SetValue(&metric)
 		answer = prepareAnswer(metric)
 	} else {
 		answer = []byte("something went wrong")
@@ -48,6 +48,8 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	// }
 
 	ResponseWritter(w, status, answer, respSet)
+
+	defer req.Body.Close()
 }
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
@@ -70,6 +72,7 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	}
 
 	ResponseWritter(w, status, answer, respSet)
+	defer req.Body.Close()
 }
 
 func GetAll(w http.ResponseWriter, req *http.Request) {
@@ -85,6 +88,7 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	ResponseWritter(w, http.StatusOK, []byte(body), respSet)
+	defer req.Body.Close()
 }
 
 func (r *RespSettings) Init(req *http.Request) {

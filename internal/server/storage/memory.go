@@ -27,11 +27,11 @@ var storage memStorage = nil
 // }
 
 // func (memStorage) SetValue(MetricName, metricType string, gaugeValue float64, counterValue int64) {
-func (memStorage) SetValue(MetricName string, metric MemStruct) {
+func (*memStorage) SetValue(metric *MemStruct) {
 
-	metric.CounterValue = storage[MetricName].CounterValue + metric.CounterValue
+	metric.CounterValue += storage[metric.MetricName].CounterValue
+	storage[metric.MetricName] = *metric
 
-	storage[MetricName] = metric
 	l := logger.GetLogger()
 	l.Info().Str("metric", metric.MetricName).Str("type", metric.MetricType).Int64("counter", metric.CounterValue).Float64("gauge", metric.GaugeValue).Msg("set")
 
