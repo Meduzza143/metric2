@@ -114,7 +114,8 @@ func (r *RespSettings) Init(req *http.Request) {
 	if strings.Contains(req.Header.Get("Content-Type"), "application/json") {
 		r.contentType = "json"
 	}
-	if strings.Contains(req.Header.Get("Accept"), "application/json") {
+	//if strings.Contains(req.Header.Get("Accept"), "application/json") {
+	if strings.Contains(req.Header.Get("Content-Type"), "application/json") {
 		r.acceptFormat = "json"
 	}
 }
