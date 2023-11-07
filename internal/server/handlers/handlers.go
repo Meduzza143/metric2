@@ -34,11 +34,21 @@ var memStorage = storage.GetInstance()
 func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 	respSet.Init(req)
+	var typeErr error = nil
 	metric, _ := prepareRequest(w, req)
+
+	if respSet.contentType != "json" { //plain text only
+		typeErr = plainValuesCheck(req)
+		if typeErr != nil {
+			status = http.StatusBadRequest
+			ResponseWritter(w, status, []byte("wrong type"), respSet)
+			return
+		}
+	}
+
 	//if err == nil {
 	status = metric.Check()
 	if status == http.StatusOK { //ok
-
 		memStorage.SetValue(&metric)
 		answer = prepareAnswer(metric)
 	} else {
@@ -55,12 +65,9 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
 	respSet.Init(req)
-	var typeErr error = nil
-	if respSet.contentType != "json" { //plain text only
-		typeErr = plainValuesCheck(req)
-	}
+
 	metric, err := prepareRequest(w, req)
-	if (err == nil) && (typeErr == nil) {
+	if err == nil {
 		status = metric.Check()
 
 		if status == http.StatusOK {
