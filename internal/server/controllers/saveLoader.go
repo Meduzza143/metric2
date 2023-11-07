@@ -43,7 +43,11 @@ func GetSaveLoader() *SaveLoader {
 		saveLoader.interval = conf.StoreInterval
 		saveLoader.path = conf.StoragePath
 
-		os.MkdirAll(filepath.Dir(saveLoader.path), 0666)
+		err := os.MkdirAll(filepath.Dir(saveLoader.path), 0666)
+		if err != nil {
+			l := logger.GetLogger()
+			l.Err(err).Msg("server can't make dir")
+		}
 	}
 	return saveLoader
 }
@@ -75,7 +79,7 @@ func (s *SaveLoader) LoadAll() {
 		l.Info().Any("memmory restored", &mem).Msg("server")
 		saveLoader.file.Close()
 	} else {
-		l.Info().Err(err).Msg("server")
+		l.Info().Err(err).Msg("server can't load data")
 	}
 
 	l.Info().Str("loaded", "data").Msg("server")

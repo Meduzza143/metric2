@@ -11,6 +11,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type Serializer interface {
+	Serialize(storage.MemStruct) []byte
+	Deserialize(*http.Request) (storage.MemStruct, int)
+}
+
+func Deserialize(s Serializer, req *http.Request) (storage.MemStruct, int) {
+	return s.Deserialize(req)
+}
+
+func Serialize(s Serializer, mem storage.MemStruct) []byte {
+	return s.Serialize(mem)
+}
+
 type MetricsJson struct {
 	ID    string   `json:"id"`              // имя метрики
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
@@ -98,10 +111,8 @@ func (*MetricsJson) Serialize(metric storage.MemStruct) (data []byte) {
 func (*MetricsPlain) Serialize(metric storage.MemStruct) (data []byte) {
 	switch metric.MetricType {
 	case "gauge":
-		//data = []byte(fmt.Sprintf("%v = %v \n", metric.MetricName, metric.GaugeValue))
 		data = []byte(fmt.Sprintf("%v", metric.GaugeValue))
 	case "counter":
-		//data = []byte(fmt.Sprintf("%v = %v \n", metric.MetricName, metric.CounterValue))
 		data = []byte(fmt.Sprintf("%v", metric.CounterValue))
 	}
 	return
