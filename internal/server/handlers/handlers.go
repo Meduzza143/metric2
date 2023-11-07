@@ -32,13 +32,17 @@ var memStorage = storage.GetInstance()
 func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 	respSet.Init(req)
-	metric, status = prepareRequest(w, req)
-
-	if status == http.StatusOK { //ok
-		memStorage.SetValue(metric.MetricName, metric)
-		answer, status = prepareAnswer(metric)
+	metric, err := prepareRequest(w, req)
+	if err == nil {
+		status = metric.Check()
+		if status == http.StatusOK { //ok
+			memStorage.SetValue(metric.MetricName, metric)
+			answer = prepareAnswer(metric)
+		} else {
+			answer = []byte("something went wrong")
+		}
 	} else {
-		answer = []byte("something went wrong")
+		status = http.StatusBadRequest
 	}
 
 	ResponseWritter(w, status, answer, respSet)
@@ -46,12 +50,17 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
 	respSet.Init(req)
-	metric, _ = prepareRequest(w, req)
-	val, status := memStorage.GetValue(metric)
-	if status != http.StatusNotFound {
-		answer, status = prepareAnswer(val)
+	metric, err := prepareRequest(w, req)
+	if err == nil {
+		status = metric.Check()
+		if status == http.StatusOK {
+			val := memStorage.GetValue(metric)
+			answer = prepareAnswer(val)
+		} else {
+			answer = []byte("something went wrong")
+		}
 	} else {
-		answer = []byte("something went wrong")
+		status = http.StatusBadRequest
 	}
 
 	ResponseWritter(w, status, answer, respSet)
@@ -59,7 +68,6 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 
 func GetAll(w http.ResponseWriter, req *http.Request) {
 	respSet.Init(req)
-	//metric, status = prepareRequest(w, req)
 
 	body := ""
 	for k, v := range memStorage.GetAllValues() {
@@ -88,31 +96,27 @@ func (r *RespSettings) Init(req *http.Request) {
 	}
 }
 
-func prepareAnswer(val storage.MemStruct) (answer []byte, status int) {
-	if val.MetricType == metric.MetricType {
-		switch respSet.acceptFormat {
-		case "json":
-			{
-				answer = Serialize(&jsonBody, val)
-			}
-		default:
-			{
-				answer = Serialize(&plainBody, val)
-			}
+func prepareAnswer(val storage.MemStruct) (answer []byte) {
+
+	switch respSet.acceptFormat {
+	case "json":
+		{
+			answer = Serialize(&jsonBody, val)
 		}
-		status = http.StatusOK
-	} else {
-		status = http.StatusNotFound
+	default:
+		{
+			answer = Serialize(&plainBody, val)
+		}
 	}
 	return
 }
 
-func prepareRequest(w http.ResponseWriter, req *http.Request) (metric storage.MemStruct, status int) {
+func prepareRequest(w http.ResponseWriter, req *http.Request) (metric storage.MemStruct, err error) {
 	if respSet.contentType == "json" {
-		metric, status = jsonBody.Deserialize(req)
+		metric, err = jsonBody.Deserialize(req)
 		//w.Header().Set("content-type", "application/json")
 	} else {
-		metric, status = plainBody.Deserialize(req)
+		metric, err = plainBody.Deserialize(req)
 		//w.Header().Set("content-type", "text/plain")
 	}
 	return

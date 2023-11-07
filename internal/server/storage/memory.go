@@ -42,21 +42,43 @@ func (memStorage) GetAllValues() memStorage {
 	return storage
 }
 
-func (memStorage) GetValue(val MemStruct) (answer MemStruct, status int) {
-
-	currItem := storage[val.MetricName]
-	if currItem.MetricType == val.MetricType {
-		answer = currItem
-		status = http.StatusOK
-	} else {
-		status = http.StatusNotFound
-	}
-	return
-}
-
 func GetInstance() memStorage {
 	if storage == nil {
 		storage = make(memStorage)
 	}
 	return storage
+}
+
+func (memStorage) GetValue(val MemStruct) (answer MemStruct) {
+	answer = storage[val.MetricName]
+	return
+}
+
+func checkName(metric MemStruct) (status int) {
+	//при успешном приёме возвращать http.StatusOK.
+	status = http.StatusOK
+	//При попытке передать запрос без имени метрики возвращать http.StatusNotFound.
+	if metric.MetricName == "" {
+		status = http.StatusNotFound
+	}
+	return
+}
+
+func checkType(metric MemStruct) (status int) {
+	//при успешном приёме возвращать http.StatusOK.
+	//При попытке передать запрос с некорректным типом метрики или значением возвращать http.StatusBadRequest
+	status = http.StatusOK
+	currItem := storage[metric.MetricName]
+	if currItem.MetricType != metric.MetricType {
+		status = http.StatusBadRequest
+	}
+	return
+}
+
+func (m MemStruct) Check() (status int) {
+	status = checkType(m)
+	if status == http.StatusOK {
+		status = checkName(m)
+	}
+	return
 }

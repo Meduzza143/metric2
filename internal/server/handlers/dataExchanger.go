@@ -13,10 +13,10 @@ import (
 
 type Serializer interface {
 	Serialize(storage.MemStruct) []byte
-	Deserialize(*http.Request) (storage.MemStruct, int)
+	Deserialize(*http.Request) (storage.MemStruct, error)
 }
 
-func Deserialize(s Serializer, req *http.Request) (storage.MemStruct, int) {
+func Deserialize(s Serializer, req *http.Request) (storage.MemStruct, error) {
 	return s.Deserialize(req)
 }
 
@@ -33,13 +33,12 @@ type MetricsJson struct {
 
 type MetricsPlain http.Request //Переопределим тушку реквеста чтобы использовать интерфейс
 
-func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, headerStatus int) {
+func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, er error) {
 	vars := mux.Vars(req)
-	headerStatus = http.StatusOK
-
 	metric = storage.MemStruct{}
 	metric.MetricType = vars["type"]
 	metric.MetricName = vars["name"]
+	er = nil
 
 	switch vars["type"] { //gauge : float64, counter: int64
 	case "gauge":
@@ -48,7 +47,7 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, h
 			if err == nil {
 				metric.GaugeValue = value
 			} else {
-				headerStatus = http.StatusBadRequest
+				er = err
 			}
 		}
 	case "counter":
@@ -57,41 +56,40 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, h
 			if err == nil {
 				metric.CounterValue = value
 			} else {
-				headerStatus = http.StatusBadRequest
+				er = err
 			}
-		}
-	default:
-		{
-			headerStatus = http.StatusNotFound
 		}
 	}
 	defer req.Body.Close()
-	return metric, headerStatus
+	return
 }
 
-func (*MetricsJson) Deserialize(req *http.Request) (metric storage.MemStruct, headerStatus int) {
+func (*MetricsJson) Deserialize(req *http.Request) (metric storage.MemStruct, er error) {
 	var mj MetricsJson
-	headerStatus = http.StatusNotFound
-
+	//err = nil
 	body, err := io.ReadAll(req.Body)
 	if err == nil {
-		if json.Unmarshal(body, &mj) == nil { //if errror == nil
+		err = json.Unmarshal(body, &mj)
+		if err == nil { //if errror == nil
 			metric = storage.MemStruct{}
-			switch mj.MType {
-			case "gauge", "counter":
-				{
-					metric.MetricName = mj.ID
-					metric.MetricType = mj.MType
-					if mj.Value != nil {
-						metric.GaugeValue = *mj.Value
-					}
-					if mj.Delta != nil {
-						metric.CounterValue = *mj.Delta
-					}
-					headerStatus = http.StatusOK
-				}
+
+			if mj.ID != "" {
+				metric.MetricName = mj.ID
 			}
+			if mj.MType != "" {
+				metric.MetricType = mj.MType
+			}
+			if mj.Value != nil {
+				metric.GaugeValue = *mj.Value
+			}
+			if mj.Delta != nil {
+				metric.CounterValue = *mj.Delta
+			}
+		} else {
+			er = err
 		}
+	} else {
+		er = err
 	}
 	defer req.Body.Close()
 	return
