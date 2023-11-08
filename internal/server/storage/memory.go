@@ -18,15 +18,6 @@ type memStorage map[string]MemStruct
 
 var storage memStorage = nil
 
-//TODO: implement interface
-
-// type Storage interface {
-// 	SetValue(key, metricType, value string)
-// 	GetAllValues() memStorage
-// 	GetValue(key string) MemStruct
-// }
-
-// func (memStorage) SetValue(MetricName, metricType string, gaugeValue float64, counterValue int64) {
 func (*memStorage) SetValue(metric *MemStruct) {
 
 	metric.CounterValue += storage[metric.MetricName].CounterValue
@@ -34,11 +25,9 @@ func (*memStorage) SetValue(metric *MemStruct) {
 
 	l := logger.GetLogger()
 	l.Info().Str("metric", metric.MetricName).Str("type", metric.MetricType).Int64("counter", metric.CounterValue).Float64("gauge", metric.GaugeValue).Msg("set")
-
 }
 
 func (memStorage) GetAllValues() memStorage {
-	//fmt.Printf("getting all values [%v]\n ", storage)
 	return storage
 }
 

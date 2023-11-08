@@ -1,20 +1,24 @@
-package agent
+package sender
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
-	config "github.com/Meduzza143/metric/internal/agent/config"
+	"github.com/Meduzza143/metric/internal/agent/config"
+	"github.com/Meduzza143/metric/internal/agent/data"
 	"github.com/Meduzza143/metric/internal/logger"
+	"github.com/Meduzza143/metric/internal/serializer"
 	"github.com/Meduzza143/metric/internal/zipper"
 )
 
-func (storage MemStorage) Send(url string) {
-	for k, v := range storage {
-		sendData(url, v.value, k, v.metricType)
+func Send(url string) {
+	storage := data.GetInstance()
+	for _, v := range storage {
+		sendData(url, v)
 	}
 }
 
@@ -34,7 +38,7 @@ func (rc *requestCounter) incr() {
 	*rc += 1
 }
 
-func sendData(url, value, name, valueType string) {
+func sendData(url string, metric data.DataStruct) {
 	c := getCounter()
 	c.incr()
 	fmt.Printf("%v ---send number[%v] start---%v\n", strings.Repeat("*", 50), *c, strings.Repeat("*", 50))
@@ -43,32 +47,40 @@ func sendData(url, value, name, valueType string) {
 	var request *http.Request
 	l := logger.GetLogger()
 
-	finalURL := fmt.Sprintf("%s/update/%s/%s/%s", url, valueType, name, value)
+	// var value string
+	// if metric.MetricType == "counter" {
+	// 	value = strconv.FormatInt(metric.CounterValue, 10)
+	// } else { //gauge
+	// 	value = strconv.FormatFloat(metric.GaugeValue, 'f', -1, 64)
+	// }
+	// finalURL := fmt.Sprintf("%s/update/%s/%s/%s", url, metric.MetricType, metric.MetricName, value)
 
-	l.Info().Str("sending", finalURL).Msg("agent")
+	// l.Info().Str("sending", finalURL).Msg("agent")
 
-	mockData := []byte(`
-	{
-		"test": "data",
+	var finalURL string = url + "/update/"
+
+	var mj = serializer.MetricsJson{
+		MType: metric.MetricType,
+		ID:    metric.MetricName,
+		Delta: &metric.CounterValue,
+		Value: &metric.GaugeValue,
 	}
-	`)
 
-	//cfg.Gzip = true //TEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	data, _ := json.Marshal(mj)
 
 	if cfg.Gzip {
-		zippeddata := zipper.GzipBytes(mockData) //zipper.GzipBytes(request.Body)
+		zippeddata := zipper.GzipBytes(data) //zipper.GzipBytes(request.Body)
 		l.Info().Str("sending data", string(zippeddata)).Msg("agent sending body")
 		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(zippeddata))
 		request.Header.Set("Content-Encoding", "gzip")
-		//	request.Header.Set("Accept-Encoding", "gzip")
 	} else {
-		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(mockData))
-		l.Info().Str("sending data", string(mockData)).Msg("agent sending body")
-		request.Header.Set("Content-Encoding", "text/plain")
-		//	request.Header.Set("Accept-Encoding", "text/plain")
-		//request.Header.Set("Accept-Encoding", "identity")
+		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(data))
+		l.Info().Str("sending data", string(data)).Msg("agent sending body")
 	}
 	request.Header.Set("Accept-Encoding", "gzip")
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+
 	for i, v := range request.Header {
 		l.Debug().Strs(i, v).Msg("agent set header")
 	}
@@ -97,5 +109,4 @@ func sendData(url, value, name, valueType string) {
 		defer res.Body.Close()
 	}
 	fmt.Printf("%v ---send number[%v] end---%v\n", strings.Repeat("#", 50), *c, strings.Repeat("#", 50))
-
 }

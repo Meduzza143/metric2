@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Meduzza143/metric/internal/agent"
-	config "github.com/Meduzza143/metric/internal/agent/config"
+	"github.com/Meduzza143/metric/internal/agent/config"
+	"github.com/Meduzza143/metric/internal/agent/poller"
+	"github.com/Meduzza143/metric/internal/agent/sender"
 	"github.com/Meduzza143/metric/internal/logger"
 	"github.com/xlab/closer"
 )
@@ -13,7 +14,6 @@ import (
 func main() {
 	fmt.Println("starting agent ...")
 	cfg := config.GetConfig()
-	data := agent.NewStorage()
 	l := logger.GetLogger()
 
 	l.Info().Str("server address", cfg.Address).Msg("Agent")
@@ -28,11 +28,11 @@ func main() {
 		select {
 		case <-pollTicker.C:
 			{
-				data.Poll()
+				poller.Poll()
 			}
 		case <-reportTicker.C:
 			{
-				data.Send(cfg.Address)
+				sender.Send(cfg.Address)
 			}
 		}
 	}

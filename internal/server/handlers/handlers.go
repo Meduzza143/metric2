@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Meduzza143/metric/internal/serializer"
 	"github.com/Meduzza143/metric/internal/server/storage"
 	"github.com/gorilla/mux"
 )
@@ -18,8 +19,8 @@ type RespSettings struct {
 }
 
 var answer []byte
-var jsonBody MetricsJson
-var plainBody MetricsPlain
+var jsonBody serializer.MetricsJson
+var plainBody serializer.MetricsPlain
 var respSet = RespSettings{}
 var status int
 var metric storage.MemStruct
@@ -127,12 +128,12 @@ func prepareAnswer(w http.ResponseWriter, val storage.MemStruct) (answer []byte)
 	switch respSet.acceptFormat {
 	case "json":
 		{
-			answer = Serialize(&jsonBody, val)
+			answer = serializer.Serialize(&jsonBody, val)
 			w.Header().Set("Content-Type", "application/json")
 		}
 	default:
 		{
-			answer = Serialize(&plainBody, val)
+			answer = serializer.Serialize(&plainBody, val)
 		}
 	}
 	return

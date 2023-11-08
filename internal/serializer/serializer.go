@@ -1,4 +1,4 @@
-package handlers
+package serializer
 
 import (
 	"encoding/json"
@@ -44,17 +44,11 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, e
 	case "gauge":
 		{
 			value, _ := strconv.ParseFloat(vars["value"], 64)
-			// if err != nil {
-			// 	er = err
-			// }
 			metric.GaugeValue = value
 		}
 	case "counter":
 		{
 			value, _ := strconv.ParseInt(vars["value"], 10, 64)
-			// if err != nil {
-			// 	er = err
-			// }
 			metric.CounterValue = value
 		}
 	}
