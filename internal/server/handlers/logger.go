@@ -2,17 +2,43 @@ package handlers
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Meduzza143/metric/internal/logger"
 )
 
+type requestCounter int64
+
+var rc *requestCounter = nil
+
+func getCounter() *requestCounter {
+	if rc == nil {
+		rc = new(requestCounter)
+		*rc = 0
+	}
+	return rc
+}
+
+func (rc *requestCounter) incr() {
+	*rc += 1
+}
+
 func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		l := logger.GetLogger()
+
+		c := getCounter()
+		c.incr()
+
+		fmt.Printf("%v ---Request number[%v]---%v", strings.Repeat("*", 10), c, strings.Repeat("*", 10))
+
+		l.Info().Msg()
+
 		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")
 		reqStart := time.Now()
 
@@ -46,5 +72,7 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		reqDuration := time.Now().Sub(reqStart)
 		l.Info().Dur("request running time", reqDuration).Msg("request")
+
+		fmt.Printf("%v ---Request number[%v] end---%v", strings.Repeat("#", 10), c, strings.Repeat("#", 10))
 	})
 }
