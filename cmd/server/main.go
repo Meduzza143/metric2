@@ -28,7 +28,7 @@ func main() {
 	}
 	go s.Run()
 
-	closer.Bind(stopSrv)
+	closer.Bind(stopSrv) //перехватывает системные события на закрытие программы (не обязательно аккуратно) и вызывает функцию
 
 	err := http.ListenAndServe(conf.Address, r)
 	if err != nil {

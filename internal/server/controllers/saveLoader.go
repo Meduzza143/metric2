@@ -84,8 +84,8 @@ func (s *SaveLoader) LoadAll() {
 		saveLoader.file.Close()
 		l.Info().Any("memmory restored", &mem).Msg("server")
 	} else {
-		l.Info().Err(err).Msg("server can't load data ... initializing db")
-		mem.MemInit()
+		l.Info().Err(err).Msg("server can't load data ... new mem struct")
+		//mem.MemInit()
 	}
 
 }
