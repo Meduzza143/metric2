@@ -54,11 +54,16 @@ func GetSaveLoader() *SaveLoader {
 
 func (s *SaveLoader) Run() {
 	s.keepRunning = true
-	for s.keepRunning {
-		s.SaveAll()
-		time.Sleep(s.interval)
+	if s.interval > 0 {
+		for s.keepRunning {
+			s.SaveAll()
+			time.Sleep(s.interval)
+		}
+		s.file.Close()
+	} else if s.interval == 0 {
+		//sync input
 	}
-	s.file.Close()
+
 }
 
 func (s *SaveLoader) Stop() {
@@ -76,14 +81,13 @@ func (s *SaveLoader) LoadAll() {
 		saveLoader.file = file
 		saveLoader.decoder = json.NewDecoder(file)
 		saveLoader.decoder.Decode(&mem)
-		l.Info().Any("memmory restored", &mem).Msg("server")
 		saveLoader.file.Close()
+		l.Info().Any("memmory restored", &mem).Msg("server")
 	} else {
 		l.Info().Err(err).Msg("server can't load data ... initializing db")
 		mem.MemInit()
 	}
 
-	l.Info().Str("loaded", "data").Msg("server")
 }
 
 func (s *SaveLoader) SaveAll() {

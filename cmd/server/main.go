@@ -8,6 +8,7 @@ import (
 	server "github.com/Meduzza143/metric/internal/server"
 	"github.com/Meduzza143/metric/internal/server/controllers"
 	config "github.com/Meduzza143/metric/internal/server/settings"
+	"github.com/xlab/closer"
 )
 
 func main() {
@@ -26,13 +27,18 @@ func main() {
 		s.LoadAll()
 	}
 	go s.Run()
-	defer s.Stop()
 
-	defer l.Info().Msg("server shut down")
+	closer.Bind(stopSrv)
 
 	err := http.ListenAndServe(conf.Address, r)
 	if err != nil {
 		panic(err)
 	}
+}
 
+func stopSrv() {
+	s := controllers.GetSaveLoader()
+	s.Stop()
+	l := logger.GetLogger()
+	l.Info().Msg("server shut down")
 }
