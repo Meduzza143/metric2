@@ -134,6 +134,7 @@ func prepareAnswer(w http.ResponseWriter, val storage.MemStruct) (answer []byte)
 	default:
 		{
 			answer = serializer.Serialize(&plainBody, val)
+			w.Header().Set("Content-Type", "text/html")
 		}
 	}
 	return
