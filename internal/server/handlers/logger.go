@@ -16,9 +16,9 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")
 		reqStart := time.Now()
 
-		for i, v := range req.Header {
-			l.Debug().Strs(i, v).Msg("server request header")
-		}
+		// for i, v := range req.Header {
+		// 	l.Debug().Strs(i, v).Msg("server request header")
+		// }
 
 		// Read the Body content
 		var buf []byte
