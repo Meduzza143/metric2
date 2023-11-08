@@ -37,11 +37,15 @@ func sendData(url, value, name, valueType string) {
 
 	if cfg.Gzip {
 		zippeddata := zipper.GzipBytes(mockData) //zipper.GzipBytes(request.Body)
+		l.Info().Str("sending data", string(zippeddata)).Msg("agent sending body")
 		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(zippeddata))
 		request.Header.Set("Content-Encoding", "gzip")
+		//	request.Header.Set("Accept-Encoding", "gzip")
 	} else {
 		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(mockData))
-		request.Header.Set("Content-Type", "text/plain")
+		l.Info().Str("sending data", string(mockData)).Msg("agent sending body")
+		request.Header.Set("Content-Encoding", "text/plain")
+		//	request.Header.Set("Accept-Encoding", "text/plain")
 		//request.Header.Set("Accept-Encoding", "identity")
 	}
 	request.Header.Set("Accept-Encoding", "gzip")
@@ -49,12 +53,16 @@ func sendData(url, value, name, valueType string) {
 	client := &http.Client{}
 	res, err := client.Do(request)
 	if err != nil {
-		l.Error().Err(err).Msg("agent")
+		l.Error().Err(err).Msg("got request error")
 	}
 
 	var answer []byte
-	answer, _ = io.ReadAll(res.Body)
+	answer, err = io.ReadAll(res.Body)
+	if err != nil {
+		l.Err(err).Msg("answer read error")
+	}
 	if strings.Contains(res.Header.Get("Content-Encoding"), "gzip") {
+		l.Debug().Str("answer zipped body", string(answer)).Msg("agent zipped response")
 		answer = zipper.UnGzipBytes(answer)
 	}
 

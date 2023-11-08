@@ -106,8 +106,8 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 
 func (r *RespSettings) Init(req *http.Request) {
 	*r = RespSettings{}
-	//if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
-	if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
+	if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
+		//if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
 		r.acceptEncoding = "gzip"
 	}
 	if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
@@ -116,8 +116,8 @@ func (r *RespSettings) Init(req *http.Request) {
 	if strings.Contains(req.Header.Get("Content-Type"), "application/json") {
 		r.contentType = "json"
 	}
-	//if strings.Contains(req.Header.Get("Accept"), "application/json") {
-	if strings.Contains(req.Header.Get("Content-Type"), "application/json") {
+	if strings.Contains(req.Header.Get("Accept"), "application/json") {
+		//if strings.Contains(req.Header.Get("Content-Type"), "application/json") {
 		r.acceptFormat = "json"
 	}
 }

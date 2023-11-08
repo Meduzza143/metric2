@@ -7,6 +7,7 @@ import (
 	"github.com/Meduzza143/metric/internal/agent"
 	config "github.com/Meduzza143/metric/internal/agent/config"
 	"github.com/Meduzza143/metric/internal/logger"
+	"github.com/xlab/closer"
 )
 
 func main() {
@@ -21,6 +22,8 @@ func main() {
 	reportTicker := time.NewTicker(cfg.ReportInterval)
 	pollTicker := time.NewTicker(cfg.PollInterval)
 
+	closer.Bind(stopAgent)
+
 	for {
 		select {
 		case <-pollTicker.C:
@@ -33,4 +36,9 @@ func main() {
 			}
 		}
 	}
+}
+
+func stopAgent() {
+	l := logger.GetLogger()
+	l.Info().Msg("agent shut down...")
 }
