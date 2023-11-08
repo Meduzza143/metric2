@@ -105,6 +105,7 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *RespSettings) Init(req *http.Request) {
+	*r = RespSettings{}
 	//if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
 	if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
 		r.acceptEncoding = "gzip"
