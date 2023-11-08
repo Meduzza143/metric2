@@ -19,7 +19,7 @@ func main() {
 	s := controllers.GetSaveLoader() //try load data
 	if conf.Restore {
 		s.LoadAll()
-		l.Debug().Msg("data has been restored")
+		l.Info().Msg("data has been restored")
 	}
 	go s.Run()
 	defer s.Stop()

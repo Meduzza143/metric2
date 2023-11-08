@@ -47,4 +47,5 @@ func ResponseWritter(w http.ResponseWriter, status int, data []byte, settings Re
 
 	w.WriteHeader(status)
 	w.Write(answer)
+
 }

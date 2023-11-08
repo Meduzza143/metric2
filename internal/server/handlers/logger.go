@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"time"
 
@@ -17,8 +19,17 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		for i, v := range req.Header {
 			l.Debug().Strs(i, v).Msg("server request header")
 		}
-		//fmt.Printf("HEADER:[%v]\n", req.Header)
-		//fmt.Printf("BODY:[%v]\n", req.Body)
+
+		// Read the Body content
+		var buf []byte
+		if req.Body != nil {
+			buf, _ = io.ReadAll(req.Body)
+		}
+		// Restore the io.ReadCloser to its original state
+		req.Body = io.NopCloser(bytes.NewBuffer(buf))
+
+		l.Debug().Str("BODY", string(buf)).Msg("request body")
+
 		respdata := responseData{
 			status: 0,
 			size:   0,
