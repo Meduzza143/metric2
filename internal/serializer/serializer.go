@@ -92,8 +92,16 @@ func (*MetricsJson) Serialize(metric storage.MemStruct) (data []byte) {
 	var mj = MetricsJson{
 		MType: metric.MetricType,
 		ID:    metric.MetricName,
-		Delta: &metric.CounterValue,
-		Value: &metric.GaugeValue,
+	}
+	switch metric.MetricType {
+	case "counter":
+		{
+			mj.Delta = &metric.CounterValue
+		}
+	case "gauge":
+		{
+			mj.Value = &metric.GaugeValue
+		}
 	}
 	data, _ = json.Marshal(mj)
 	return
