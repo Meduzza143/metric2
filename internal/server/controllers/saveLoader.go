@@ -79,7 +79,8 @@ func (s *SaveLoader) LoadAll() {
 		l.Info().Any("memmory restored", &mem).Msg("server")
 		saveLoader.file.Close()
 	} else {
-		l.Info().Err(err).Msg("server can't load data")
+		l.Info().Err(err).Msg("server can't load data ... initializing db")
+		mem.MemInit()
 	}
 
 	l.Info().Str("loaded", "data").Msg("server")
