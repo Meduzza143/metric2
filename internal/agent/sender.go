@@ -69,6 +69,9 @@ func sendData(url, value, name, valueType string) {
 		//request.Header.Set("Accept-Encoding", "identity")
 	}
 	request.Header.Set("Accept-Encoding", "gzip")
+	for i, v := range request.Header {
+		l.Debug().Strs(i, v).Msg("agent set header")
+	}
 
 	client := &http.Client{}
 	res, err := client.Do(request)
