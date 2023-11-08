@@ -18,7 +18,27 @@ func (storage MemStorage) Send(url string) {
 	}
 }
 
+type requestCounter int64
+
+var rc *requestCounter = nil
+
+func getCounter() *requestCounter {
+	if rc == nil {
+		rc = new(requestCounter)
+		*rc = 0
+	}
+	return rc
+}
+
+func (rc *requestCounter) incr() {
+	*rc += 1
+}
+
 func sendData(url, value, name, valueType string) {
+	c := getCounter()
+	c.incr()
+	fmt.Printf("%v ---send number[%v] start---%v\n", strings.Repeat("*", 50), *c, strings.Repeat("*", 50))
+
 	cfg := config.GetConfig()
 	var request *http.Request
 	l := logger.GetLogger()
@@ -53,15 +73,16 @@ func sendData(url, value, name, valueType string) {
 	client := &http.Client{}
 	res, err := client.Do(request)
 
-	for i, v := range res.Header {
-		l.Debug().Strs(i, v).Msg("agent got header")
-	}
 	if err != nil {
 		l.Error().Err(err).Msg("got request error")
 
 	} else {
+		for i, v := range res.Header {
+			l.Debug().Strs(i, v).Msg("agent got header")
+		}
 		var answer []byte
 		answer, err = io.ReadAll(res.Body)
+
 		if err != nil {
 			l.Err(err).Msg("answer read error")
 		}
@@ -70,7 +91,8 @@ func sendData(url, value, name, valueType string) {
 			answer = zipper.UnGzipBytes(answer)
 		}
 		l.Debug().Str("answer body", string(answer)).Msg("agent")
+		defer res.Body.Close()
 	}
+	fmt.Printf("%v ---send number[%v] end---%v\n", strings.Repeat("#", 50), *c, strings.Repeat("#", 50))
 
-	defer res.Body.Close()
 }
