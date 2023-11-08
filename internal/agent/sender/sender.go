@@ -75,8 +75,8 @@ func sendData(url string, metric data.DataStruct) {
 		request.Header.Set("Content-Encoding", "gzip")
 	} else {
 		request, _ = http.NewRequest("POST", finalURL, bytes.NewBuffer(data))
-		l.Info().Str("sending data", string(data)).Msg("agent sending body")
 	}
+	l.Info().Str("sending data", string(data)).Msg("agent sending body (RAW)")
 	request.Header.Set("Accept-Encoding", "gzip")
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
