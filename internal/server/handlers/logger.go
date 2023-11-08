@@ -35,16 +35,14 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		c := getCounter()
 		c.incr()
 
-		fmt.Printf("%v ---Request number[%v]---%v", strings.Repeat("*", 10), c, strings.Repeat("*", 10))
-
-		l.Info().Msg()
+		fmt.Printf("%v ---Request number[%v] start---%v\n", strings.Repeat("*", 50), *c, strings.Repeat("*", 50))
 
 		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")
 		reqStart := time.Now()
 
-		// for i, v := range req.Header {
-		// 	l.Debug().Strs(i, v).Msg("server request header")
-		// }
+		for i, v := range req.Header {
+			l.Debug().Strs(i, v).Msg("server request header")
+		}
 
 		// Read the Body content
 		var buf []byte
@@ -73,6 +71,6 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		reqDuration := time.Now().Sub(reqStart)
 		l.Info().Dur("request running time", reqDuration).Msg("request")
 
-		fmt.Printf("%v ---Request number[%v] end---%v", strings.Repeat("#", 10), c, strings.Repeat("#", 10))
+		fmt.Printf("%v ---Request number[%v] end---%v\n", strings.Repeat("#", 50), *c, strings.Repeat("#", 50))
 	})
 }
