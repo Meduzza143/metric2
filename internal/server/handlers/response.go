@@ -43,9 +43,9 @@ func ResponseWritter(w http.ResponseWriter, status int, data []byte, settings Re
 	} else {
 		answer = data
 	}
+	w.Header().Set("This server is ", "MINE")
 	l.Debug().Str("answer body", string(answer)).Msg("response")
 
 	w.WriteHeader(status)
 	w.Write(answer)
-
 }

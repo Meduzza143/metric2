@@ -52,20 +52,25 @@ func sendData(url, value, name, valueType string) {
 
 	client := &http.Client{}
 	res, err := client.Do(request)
+
+	for i, v := range res.Header {
+		l.Debug().Strs(i, v).Msg("agent got header")
+	}
 	if err != nil {
 		l.Error().Err(err).Msg("got request error")
+
+	} else {
+		var answer []byte
+		answer, err = io.ReadAll(res.Body)
+		if err != nil {
+			l.Err(err).Msg("answer read error")
+		}
+		if strings.Contains(res.Header.Get("Content-Encoding"), "gzip") {
+			l.Debug().Str("answer zipped body", string(answer)).Msg("agent zipped response")
+			answer = zipper.UnGzipBytes(answer)
+		}
+		l.Debug().Str("answer body", string(answer)).Msg("agent")
 	}
 
-	var answer []byte
-	answer, err = io.ReadAll(res.Body)
-	if err != nil {
-		l.Err(err).Msg("answer read error")
-	}
-	if strings.Contains(res.Header.Get("Content-Encoding"), "gzip") {
-		l.Debug().Str("answer zipped body", string(answer)).Msg("agent zipped response")
-		answer = zipper.UnGzipBytes(answer)
-	}
-
-	l.Debug().Str("answer body", string(answer)).Msg("agent")
 	defer res.Body.Close()
 }
