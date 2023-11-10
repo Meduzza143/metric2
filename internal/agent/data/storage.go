@@ -34,14 +34,15 @@ func (m DataStorage) UpdateMetric(name string, metricType string, value interfac
 		}
 	case "gauge":
 		{
-			switch value.(type) {
+			switch v := value.(type) {
 			case float64:
 				{
-					newStruct.GaugeValue = value.(float64)
+					//newStruct.GaugeValue = value.(float64)
+					newStruct.GaugeValue = v
 				}
 			default:
 				{
-					newStruct.GaugeValue, _ = strconv.ParseFloat(fmt.Sprintf("%v", value), 64)
+					newStruct.GaugeValue, _ = strconv.ParseFloat(fmt.Sprintf("%v", v), 64)
 				}
 			}
 		}

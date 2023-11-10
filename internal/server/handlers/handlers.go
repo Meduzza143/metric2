@@ -19,7 +19,7 @@ type RespSettings struct {
 }
 
 var answer []byte
-var jsonBody serializer.MetricsJson
+var jsonBody serializer.MetricsJSON
 var plainBody serializer.MetricsPlain
 var respSet = RespSettings{}
 var status int

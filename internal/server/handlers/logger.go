@@ -68,7 +68,8 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		l.Info().Int("status", respdata.status).Int("size", respdata.size).Msg("response")
 
-		reqDuration := time.Now().Sub(reqStart)
+		reqDuration := time.Since(reqStart)
+
 		l.Info().Dur("request running time", reqDuration).Msg("request")
 
 		fmt.Printf("%v ---Request number[%v] end---%v\n", strings.Repeat("#", 50), *c, strings.Repeat("#", 50))

@@ -10,7 +10,7 @@ var zlog *zerolog.Logger = nil
 
 func GetLogger() *zerolog.Logger {
 	if zlog == nil {
-		var logg zerolog.Logger = zerolog.New(os.Stdout)
+		var logg = zerolog.New(os.Stdout)
 		zlog = &logg
 		setConf()
 	}

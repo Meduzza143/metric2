@@ -60,9 +60,10 @@ func (s *SaveLoader) Run() {
 			time.Sleep(s.interval)
 		}
 		s.file.Close()
-	} else if s.interval == 0 {
-		//sync input
 	}
+	// } else if s.interval == 0 {
+	// 	//sync input
+	// }
 
 }
 

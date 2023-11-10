@@ -69,18 +69,15 @@ func (metric MemStruct) checkType() (status int) {
 	return
 }
 
-func (m MemStruct) Check() (status int) {
-	status = m.checkType()
+func (metric MemStruct) Check() (status int) {
+	status = metric.checkType()
 	if status == http.StatusOK {
-		status = m.CheckName()
+		status = metric.CheckName()
 	}
 	return
 }
 
-func (m MemStruct) IsExist() bool {
-	currItem := storage[m.MetricName]
-	if currItem.MetricType != m.MetricType {
-		return false
-	}
-	return true
+func (metric MemStruct) IsExist() bool {
+	currItem := storage[metric.MetricName]
+	return currItem.MetricType == metric.MetricType
 }

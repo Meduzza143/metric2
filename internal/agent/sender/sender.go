@@ -57,9 +57,9 @@ func sendData(url string, metric data.DataStruct) {
 
 	// l.Info().Str("sending", finalURL).Msg("agent")
 
-	var finalURL string = url + "/update/"
+	var finalURL = url + "/update/"
 
-	var mj = serializer.MetricsJson{
+	var mj = serializer.MetricsJSON{
 		MType: metric.MetricType,
 		ID:    metric.MetricName,
 		Delta: &metric.CounterValue,
