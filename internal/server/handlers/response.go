@@ -39,13 +39,45 @@ func ResponseWritter(w http.ResponseWriter, status int, data []byte, settings Re
 	var answer []byte
 	if settings.acceptEncoding == "gzip" {
 		answer = zipper.GzipBytes(data)
-		w.Header().Set("Content-Encoding", "gzip")
 	} else {
 		answer = data
 	}
-	w.Header().Set("This server is ", "MINE")
+
 	l.Debug().Str("answer body", string(answer)).Msg("response")
+
+	addHeaders(w)
+
+	for i, v := range w.Header() {
+		l.Debug().Strs(i, v).Msg("server response header")
+	}
 
 	w.WriteHeader(status)
 	w.Write(answer)
+
+}
+
+func addHeaders(w http.ResponseWriter) {
+	w.Header().Set("This server is ", "MINE")
+
+	switch respSet.acceptFormat {
+	case "json":
+		{
+			w.Header().Set("Content-Type", "application/json")
+		}
+	default:
+		{
+			w.Header().Set("Content-Type", "text/html")
+		}
+	}
+
+	switch respSet.acceptEncoding {
+	case "gzip":
+		{
+			w.Header().Set("Content-Encoding", "gzip")
+		}
+	default:
+		{
+			w.Header().Set("Content-Encoding", "identity")
+		}
+	}
 }
