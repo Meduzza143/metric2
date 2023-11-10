@@ -40,9 +40,9 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		l.Info().Str("URI", req.URL.Path).Str("Method", req.Method).Str("Remote address", req.RemoteAddr).Msg("request")
 		reqStart := time.Now()
 
-		for i, v := range req.Header {
-			l.Debug().Strs(i, v).Msg("server request header")
-		}
+		// for i, v := range req.Header {
+		// 	l.Debug().Strs(i, v).Msg("server request header")
+		// }
 
 		// Read the Body content
 		var buf []byte
@@ -52,7 +52,7 @@ func LogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// Restore the io.ReadCloser to its original state
 		req.Body = io.NopCloser(bytes.NewBuffer(buf))
 
-		l.Debug().Str("BODY", string(buf)).Msg("request body")
+		//l.Debug().Str("BODY", string(buf)).Msg("request body")
 
 		respdata := responseData{
 			status: 0,

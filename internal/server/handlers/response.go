@@ -43,13 +43,13 @@ func ResponseWritter(w http.ResponseWriter, status int, data []byte, settings Re
 		answer = data
 	}
 
-	l.Debug().Str("answer body", string(answer)).Msg("response")
+	//l.Debug().Str("answer body", string(answer)).Msg("response")
 
 	addHeaders(w)
 
-	for i, v := range w.Header() {
-		l.Debug().Strs(i, v).Msg("server response header")
-	}
+	// for i, v := range w.Header() {
+	// 	l.Debug().Strs(i, v).Msg("server response header")
+	// }
 
 	w.WriteHeader(status)
 	w.Write(answer)
