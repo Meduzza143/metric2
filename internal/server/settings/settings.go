@@ -54,7 +54,7 @@ func (c *Config) initConfig() {
 		c.StoragePath = *flagFilePath
 	}
 
-	restore, ok := os.LookupEnv("FILE_STORAGE_PATH")
+	restore, ok := os.LookupEnv("RESTORE")
 	if ok {
 		c.Restore, _ = strconv.ParseBool(restore)
 	} else {
