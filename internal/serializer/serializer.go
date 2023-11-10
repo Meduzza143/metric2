@@ -56,8 +56,8 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, e
 	return
 }
 
-func (*MetricsJson) Deserialize(req *http.Request) (metric storage.MemStruct, er error) {
-	var mj MetricsJson
+func (*MetricsJSON) Deserialize(req *http.Request) (metric storage.MemStruct, er error) {
+	var mj MetricsJSON
 	er = nil
 	//err = nil
 	body, err := io.ReadAll(req.Body)
@@ -88,8 +88,8 @@ func (*MetricsJson) Deserialize(req *http.Request) (metric storage.MemStruct, er
 	return
 }
 
-func (*MetricsJson) Serialize(metric storage.MemStruct) (data []byte) {
-	var mj = MetricsJson{
+func (*MetricsJSON) Serialize(metric storage.MemStruct) (data []byte) {
+	var mj = MetricsJSON{
 		MType: metric.MetricType,
 		ID:    metric.MetricName,
 	}
