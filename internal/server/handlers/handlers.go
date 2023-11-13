@@ -11,20 +11,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type RespSettings struct {
-	contentEncoding string // то в каком виде (запакован) передает клиент
-	acceptEncoding  string // то в каком виде (запакован) принимает клиент
-	acceptFormat    string // то в каком виде (структура) передает клиент
-	contentType     string // то в каком виде (структура) принимает клиент
+type ExtendedWriter struct {
+	http.ResponseWriter
+	status         int
+	jsonBody       serializer.MetricsJSON
+	plainBody      serializer.MetricsPlain
+	acceptFormat   string // то в каком виде (структура) передает клиент
+	acceptEncoding string // то в каком виде (запакован) принимает клиент
+	answerBody     []byte
 }
 
-var answer []byte
-var jsonBody serializer.MetricsJSON
-var plainBody serializer.MetricsPlain
-var respSet = RespSettings{}
-var status int
-var metric storage.MemStruct
-var memStorage = storage.GetInstance()
+type ExtendedRequester struct {
+	req             http.Request
+	contentType     string // то в каком виде (структура) принимает клиент
+	contentEncoding string // то в каком виде (запакован) передает клиент
+	jsonBody        serializer.MetricsJSON
+	plainBody       serializer.MetricsPlain
+}
 
 /*
 			    Сведения о запросах должны содержать URI, метод запроса и время, затраченное на его выполнение.
@@ -34,59 +37,71 @@ var memStorage = storage.GetInstance()
 // //http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
 func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
-	respSet.Init(req)
-	var typeErr error = nil
-	metric, _ := prepareRequest(w, req)
+	exWriter, exReq := extend(w, req)
 
-	if respSet.contentType != "json" { //plain text only
-		typeErr = plainValuesCheck(req)
-		if typeErr != nil {
-			status = http.StatusBadRequest
-			ResponseWritter(w, status, []byte("wrong type"), respSet)
-			return
-		}
+	var answer []byte
+	var memStorage = storage.GetInstance()
+
+	metric, _ := prepareRequest(*exReq)
+
+	if plainValuesCheck(exReq) != nil { //plain text only input check
+		exWriter.status = http.StatusBadRequest
+		ResponseWritter(*exWriter, []byte("wrong type"))
+		return
 	}
 
-	status = metric.Check()
-	if status == http.StatusOK { //ok
+	exWriter.status = metric.Check()
+
+	if exWriter.status == http.StatusOK { //ok
 		memStorage.SetValue(&metric)
-		answer = prepareAnswer(w, metric)
+		answer = prepareAnswer(*exWriter, metric)
 	} else {
 		answer = []byte("something went wrong")
 	}
 
-	ResponseWritter(w, status, answer, respSet)
+	ResponseWritter(*exWriter, answer)
 
 	defer req.Body.Close()
 }
 
 func GetMetric(w http.ResponseWriter, req *http.Request) {
-	respSet.Init(req)
+	exWriter, exReq := extend(w, req)
 
-	metric, err := prepareRequest(w, req)
-	if err == nil {
-		status = metric.Check()
+	var answer []byte
+	var memStorage = storage.GetInstance()
 
-		if status == http.StatusOK {
-			if metric.IsExist() {
-				val := memStorage.GetValue(metric)
-				answer = prepareAnswer(w, val)
-			} else {
-				status = http.StatusNotFound
-			}
-		} else {
-			answer = []byte("something went wrong")
-		}
-	} else {
-		status = http.StatusBadRequest
+	metric, err := prepareRequest(*exReq)
+	if err != nil {
+		exWriter.status = http.StatusBadRequest
+		answer = []byte("wrong request")
+		ResponseWritter(*exWriter, answer)
+		return
 	}
 
-	ResponseWritter(w, status, answer, respSet)
+	exWriter.status = metric.Check()
+
+	if exWriter.status != http.StatusOK {
+		answer = []byte("wrong metric type")
+		ResponseWritter(*exWriter, answer)
+		return
+	}
+
+	if metric.IsExist() {
+		val := memStorage.GetValue(metric)
+		answer = prepareAnswer(*exWriter, val)
+	} else {
+		exWriter.status = http.StatusNotFound
+		answer = []byte("metric not found")
+	}
+
+	ResponseWritter(*exWriter, answer)
 	defer req.Body.Close()
 }
 
 func GetAll(w http.ResponseWriter, req *http.Request) {
-	respSet.Init(req)
+	exWriter, _ := extend(w, req)
+
+	var memStorage = storage.GetInstance()
 
 	body := ""
 	for k, v := range memStorage.GetAllValues() {
@@ -97,72 +112,80 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 			body += fmt.Sprintf("[%v] %v = %v \n", v.MetricType, k, v.CounterValue)
 		}
 	}
-	ResponseWritter(w, http.StatusOK, []byte(body), respSet)
+	ResponseWritter(*exWriter, []byte(body))
 	defer req.Body.Close()
 }
 
-func (r *RespSettings) Init(req *http.Request) {
-	*r = RespSettings{}
-	if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
-		r.acceptEncoding = "gzip"
+func extend(w http.ResponseWriter, req *http.Request) (exWriter *ExtendedWriter, exReq *ExtendedRequester) {
+	exReq = &ExtendedRequester{}
+	exWriter = &ExtendedWriter{}
+
+	exReq.req = *req
+	exWriter.ResponseWriter = w
+	exWriter.status = http.StatusOK
+
+	if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") { // what client sending
+		exReq.contentEncoding = "gzip"
 	}
-	if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
-		r.contentEncoding = "gzip"
+	if strings.Contains(req.Header.Get("Content-Type"), "application/json") { //what client sending
+		exReq.contentType = "json"
 	}
-	if strings.Contains(req.Header.Get("Content-Type"), "application/json") {
-		r.contentType = "json"
+	if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") { //what client can understand
+		exWriter.acceptEncoding = "gzip"
 	}
-	if strings.Contains(req.Header.Get("Accept"), "application/json") {
-		r.acceptFormat = "json"
+	if strings.Contains(req.Header.Get("Accept"), "application/json") { //what client can accept
+		exWriter.acceptFormat = "json"
 	}
+	return
 }
 
-func prepareAnswer(w http.ResponseWriter, val storage.MemStruct) (answer []byte) {
+func prepareAnswer(exWriter ExtendedWriter, val storage.MemStruct) (answer []byte) {
 
-	switch respSet.acceptFormat {
+	switch exWriter.acceptFormat {
 	case "json":
 		{
-			answer = serializer.Serialize(&jsonBody, val)
-			w.Header().Set("Content-Type", "application/json")
+			answer = serializer.Serialize(&exWriter.jsonBody, val)
+			exWriter.Header().Set("Content-Type", "application/json")
 		}
 	default:
 		{
-			answer = serializer.Serialize(&plainBody, val)
-			w.Header().Set("Content-Type", "text/html")
+			answer = serializer.Serialize(&exWriter.plainBody, val)
+			exWriter.Header().Set("Content-Type", "text/html")
 		}
 	}
 	return
 }
 
-func prepareRequest(w http.ResponseWriter, req *http.Request) (metric storage.MemStruct, err error) {
-	if respSet.contentType == "json" {
-		metric, err = jsonBody.Deserialize(req)
-
+func prepareRequest(exReq ExtendedRequester) (metric storage.MemStruct, err error) {
+	if exReq.contentType == "json" {
+		metric, err = exReq.jsonBody.Deserialize(&exReq.req)
 	} else {
-		metric, err = plainBody.Deserialize(req)
-		//w.Header().Set("content-type", "text/plain")
+		metric, err = exReq.plainBody.Deserialize(&exReq.req)
 	}
 	return
 }
 
-func plainValuesCheck(req *http.Request) (er error) {
-	er = nil
-	vars := mux.Vars(req)
+func plainValuesCheck(exReq *ExtendedRequester) error {
+	if exReq.contentType == "json" {
+		return nil
+	}
+
+	vars := mux.Vars(&exReq.req)
 	switch vars["type"] {
 	case "gauge":
 		{
 			_, err := strconv.ParseFloat(vars["value"], 64)
 			if err != nil {
-				er = err
+				return err
 			}
 		}
 	case "counter":
 		{
 			_, err := strconv.ParseInt(vars["value"], 10, 64)
 			if err != nil {
-				er = err
+				return err
 			}
 		}
 	}
-	return
+	return nil
 }

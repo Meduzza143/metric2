@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -16,29 +17,25 @@ func main() {
 	conf := config.GetConfig()
 	r := server.Router()
 	l := logger.GetLogger()
-
 	s := controllers.GetSaveLoader()
 
 	l.Info().Str("Address", conf.Address).Dur("Store interval", conf.StoreInterval).Str("savefile path", conf.StoragePath).
 		Bool("restore", conf.Restore).Msg("server starting")
 
 	if conf.Restore {
-		l.Info().Msg("restorinmg data ...")
+		l.Info().Msg("restoring data ...")
 		s.LoadAll()
 	}
-	go s.Run()
 
-	closer.Bind(stopSrv) //перехватывает системные события на закрытие программы (не обязательно аккуратно) и вызывает функцию
+	ctx, cancel := context.WithCancel(context.Background())
+	go s.Run(ctx)
+	closer.Bind(func() { //перехватывает системные события на закрытие программы (не обязательно аккуратно) и вызывает функцию
+		l.Info().Msg("server shut down")
+		cancel()
+	})
 
 	err := http.ListenAndServe(conf.Address, r)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func stopSrv() {
-	s := controllers.GetSaveLoader()
-	s.Stop()
-	l := logger.GetLogger()
-	l.Info().Msg("server shut down")
 }

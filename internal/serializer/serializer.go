@@ -59,31 +59,31 @@ func (*MetricsPlain) Deserialize(req *http.Request) (metric storage.MemStruct, e
 func (*MetricsJSON) Deserialize(req *http.Request) (metric storage.MemStruct, er error) {
 	var mj MetricsJSON
 	er = nil
-	//err = nil
 	body, err := io.ReadAll(req.Body)
-	if err == nil {
-		err = json.Unmarshal(body, &mj)
-		if err == nil { //if errror == nil
-			metric = storage.MemStruct{}
-
-			if mj.ID != "" {
-				metric.MetricName = mj.ID
-			}
-			if mj.MType != "" {
-				metric.MetricType = mj.MType
-			}
-			if mj.Value != nil {
-				metric.GaugeValue = *mj.Value
-			}
-			if mj.Delta != nil {
-				metric.CounterValue = *mj.Delta
-			}
-		} else {
-			er = err
-		}
-	} else {
+	if err != nil {
 		er = err
+		return
 	}
+	err = json.Unmarshal(body, &mj)
+	if err != nil { //if errror == nil
+		er = err
+		return
+	}
+	metric = storage.MemStruct{}
+
+	if mj.ID != "" {
+		metric.MetricName = mj.ID
+	}
+	if mj.MType != "" {
+		metric.MetricType = mj.MType
+	}
+	if mj.Value != nil {
+		metric.GaugeValue = *mj.Value
+	}
+	if mj.Delta != nil {
+		metric.CounterValue = *mj.Delta
+	}
+
 	defer req.Body.Close()
 	return
 }

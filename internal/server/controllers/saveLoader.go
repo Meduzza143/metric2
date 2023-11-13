@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/Meduzza143/metric/internal/logger"
@@ -12,22 +14,15 @@ import (
 )
 
 type SaveLoader struct {
-	path        string
-	interval    time.Duration
-	keepRunning bool
-	file        *os.File
-	encoder     *json.Encoder
-	decoder     *json.Decoder
+	path     string
+	interval time.Duration
+	file     *os.File
+	encoder  *json.Encoder
+	decoder  *json.Decoder
 }
 
-// type jsonData struct {
-// 	ID    string  `json:"id"`              // имя метрики
-// 	MType string  `json:"type"`            // параметр, принимающий значение gauge или counter
-// 	Delta int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
-// 	Value float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
-// }
-
 var saveLoader *SaveLoader = nil
+var saveLoaderOnce sync.Once
 
 func (s *SaveLoader) openWrite() (*os.File, error) {
 	return os.OpenFile(s.path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0666)
@@ -37,7 +32,7 @@ func (s *SaveLoader) openRead() (*os.File, error) {
 }
 
 func GetSaveLoader() *SaveLoader {
-	if saveLoader == nil { //не  больше одного инстанса в одни руки
+	saveLoaderOnce.Do(func() {
 		conf := server.GetConfig()
 		saveLoader = new(SaveLoader)
 		saveLoader.interval = conf.StoreInterval
@@ -48,47 +43,41 @@ func GetSaveLoader() *SaveLoader {
 			l := logger.GetLogger()
 			l.Err(err).Msg("server can't make dir")
 		}
-	}
+	})
 	return saveLoader
 }
 
-func (s *SaveLoader) Run() {
-	s.keepRunning = true
-	if s.interval > 0 {
-		for s.keepRunning {
-			s.SaveAll()
-			time.Sleep(s.interval)
-		}
-		s.file.Close()
+func (s *SaveLoader) Run(ctx context.Context) {
+	if s.interval <= 0 {
+		return
 	}
-	// } else if s.interval == 0 {
-	// 	//sync input
-	// }
 
-}
-
-func (s *SaveLoader) Stop() {
-	s.keepRunning = false
-	s.SaveAll()
-	l := logger.GetLogger()
-	l.Info().Str("Stopping", "save loader").Msg("server")
+	t := time.NewTicker(s.interval)
+	for {
+		select {
+		case <-t.C:
+			s.SaveAll()
+		case <-ctx.Done():
+			s.SaveAll()
+			s.file.Close()
+			return
+		}
+	}
 }
 
 func (s *SaveLoader) LoadAll() {
 	mem := storage.GetInstance()
 	l := logger.GetLogger()
 	file, err := saveLoader.openRead()
-	if err == nil {
-		saveLoader.file = file
-		saveLoader.decoder = json.NewDecoder(file)
-		saveLoader.decoder.Decode(&mem)
-		saveLoader.file.Close()
-		l.Info().Any("memmory restored", &mem).Msg("server")
-	} else {
+	if err != nil {
 		l.Info().Err(err).Msg("server can't load data ... new mem struct")
-		//mem.MemInit()
+		return
 	}
-
+	saveLoader.file = file
+	saveLoader.decoder = json.NewDecoder(file)
+	saveLoader.decoder.Decode(&mem)
+	saveLoader.file.Close()
+	l.Info().Any("memmory restored", &mem).Msg("server")
 }
 
 func (s *SaveLoader) SaveAll() {
@@ -97,15 +86,14 @@ func (s *SaveLoader) SaveAll() {
 
 	if len(mem) > 0 {
 		file, err := saveLoader.openWrite()
-		if err == nil {
-			saveLoader.file = file
-			saveLoader.encoder = json.NewEncoder(file)
-			saveLoader.encoder.Encode(mem)
-			saveLoader.file.Close()
-		} else {
+		if err != nil {
 			l.Info().Err(err).Msg("server")
+			return
 		}
-
+		saveLoader.file = file
+		saveLoader.encoder = json.NewEncoder(file)
+		saveLoader.encoder.Encode(mem)
+		saveLoader.file.Close()
 		l.Info().Str("saved", "data").Msg("server")
 	}
 }

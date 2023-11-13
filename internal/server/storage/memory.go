@@ -2,6 +2,7 @@ package storage
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/Meduzza143/metric/internal/logger"
 )
@@ -17,6 +18,7 @@ type MemStruct struct {
 type memStorage map[string]MemStruct
 
 var storage memStorage = nil
+var storageOnce sync.Once
 
 func (*memStorage) SetValue(metric *MemStruct) {
 
@@ -32,9 +34,9 @@ func (memStorage) GetAllValues() memStorage {
 }
 
 func GetInstance() memStorage {
-	if storage == nil {
+	storageOnce.Do(func() {
 		storage = make(memStorage)
-	}
+	})
 	return storage
 }
 
