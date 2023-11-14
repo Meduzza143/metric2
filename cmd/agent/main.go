@@ -4,40 +4,41 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Meduzza143/metric/internal/agent"
-	config "github.com/Meduzza143/metric/internal/agent/config"
+	"github.com/Meduzza143/metric/internal/agent/config"
+	"github.com/Meduzza143/metric/internal/agent/poller"
+	"github.com/Meduzza143/metric/internal/agent/sender"
+	"github.com/Meduzza143/metric/internal/logger"
+	"github.com/xlab/closer"
 )
 
 func main() {
 	fmt.Println("starting agent ...")
-	conf := config.GetConfig()
-	data := agent.NewStorage()
+	cfg := config.GetConfig()
+	l := logger.GetLogger()
 
-	// if conf.CheckConfig() == false {
-	// 	fmt.Printf("wrong arguments:")
-	// 	fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", conf.Address, conf.PollInterval, conf.ReportInterval)
-	// 	os.Exit(0)
-	// }
+	l.Info().Str("server address", cfg.Address).Msg("Agent")
+	l.Info().Dur("report interval", cfg.ReportInterval).Dur("poll interval", cfg.PollInterval).Bool("use gzip", cfg.Gzip).Msg("Agent starting")
 
-	fmt.Printf("agent settings:\n address[%v]\n poll interval[%v]\n report interval[%v]", conf.Address, conf.PollInterval, conf.ReportInterval)
+	reportTicker := time.NewTicker(cfg.ReportInterval)
+	pollTicker := time.NewTicker(cfg.PollInterval)
 
-	reportTicker := time.NewTicker(conf.ReportInterval)
-	fmt.Println("report ticker has been set")
-	pollTicker := time.NewTicker(conf.PollInterval)
-	fmt.Println("poll ticker has been set")
+	closer.Bind(stopAgent)
 
 	for {
 		select {
 		case <-pollTicker.C:
 			{
-				data.Poll()
-				//fmt.Println("poll triggered")
+				poller.Poll()
 			}
 		case <-reportTicker.C:
 			{
-				data.Send(conf.Address)
-				//fmt.Println("report triggered")
+				sender.Send(cfg.Address)
 			}
 		}
 	}
+}
+
+func stopAgent() {
+	l := logger.GetLogger()
+	l.Info().Msg("agent shut down...")
 }

@@ -1,5 +1,7 @@
 package agent
 
+// import "testing"
+
 // func TestSendData(t *testing.T) {
 
 // 	tests := []struct { // добавляем слайс тестов
