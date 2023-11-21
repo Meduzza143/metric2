@@ -12,6 +12,7 @@ func Router() *mux.Router {
 	r.HandleFunc(`/update/`, handlers.UnpackMiddleware(handlers.LogMiddleware(handlers.UpdateHandle))).Methods("POST") //for json handling
 	r.HandleFunc(`/value/{type}/{name}`, handlers.UnpackMiddleware(handlers.LogMiddleware(handlers.GetMetric))).Methods("GET")
 	r.HandleFunc(`/value/`, handlers.UnpackMiddleware(handlers.LogMiddleware(handlers.GetMetric))).Methods("POST")
+	r.HandleFunc(`/ping`, handlers.UnpackMiddleware(handlers.LogMiddleware(handlers.PingDB))).Methods("GET")
 	r.HandleFunc(`/`, handlers.UnpackMiddleware(handlers.LogMiddleware(handlers.GetAll))).Methods("GET")
 
 	return r

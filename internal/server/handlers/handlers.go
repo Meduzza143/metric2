@@ -40,7 +40,8 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 	exWriter, exReq := extend(w, req)
 
 	var answer []byte
-	var memStorage = storage.GetInstance()
+
+	var storage = storage.GetDBHandler()
 
 	metric, _ := prepareRequest(*exReq)
 
@@ -50,10 +51,10 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	exWriter.status = metric.Check()
+	exWriter.status = storage.Check(metric.MetricName, metric.MetricType)
 
 	if exWriter.status == http.StatusOK { //ok
-		memStorage.SetValue(&metric)
+		storage.Update(&metric)
 		answer = prepareAnswer(*exWriter, metric)
 	} else {
 		answer = []byte("something went wrong")
@@ -68,7 +69,7 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 	exWriter, exReq := extend(w, req)
 
 	var answer []byte
-	var memStorage = storage.GetInstance()
+	var storage = storage.GetDBHandler()
 
 	metric, err := prepareRequest(*exReq)
 	if err != nil {
@@ -78,7 +79,7 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	exWriter.status = metric.Check()
+	exWriter.status = storage.Check(metric.MetricName, metric.MetricType)
 
 	if exWriter.status != http.StatusOK {
 		answer = []byte("wrong metric type")
@@ -86,9 +87,9 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if metric.IsExist() {
-		val := memStorage.GetValue(metric)
-		answer = prepareAnswer(*exWriter, val)
+	if storage.IsExist(metric.MetricName, metric.MetricType) {
+		val := storage.GetOne(metric.MetricName)
+		answer = prepareAnswer(*exWriter, *val)
 	} else {
 		exWriter.status = http.StatusNotFound
 		answer = []byte("metric not found")
@@ -101,10 +102,12 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 func GetAll(w http.ResponseWriter, req *http.Request) {
 	exWriter, _ := extend(w, req)
 
-	var memStorage = storage.GetInstance()
+	//	var memStorage = storage.GetInstance()
+	var storage = storage.GetDBHandler()
+	allValues := storage.GetAllValues()
 
 	body := ""
-	for k, v := range memStorage.GetAllValues() {
+	for k, v := range allValues.GetAllValues() {
 		switch v.MetricType {
 		case "gauge":
 			body += fmt.Sprintf("[%v] %v = %v \n", v.MetricType, k, v.GaugeValue)
@@ -114,6 +117,18 @@ func GetAll(w http.ResponseWriter, req *http.Request) {
 	}
 	ResponseWritter(*exWriter, []byte(body))
 	defer req.Body.Close()
+}
+
+func PingDB(w http.ResponseWriter, req *http.Request) {
+	//При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error
+	exWriter, _ := extend(w, req)
+	if storage.PingPSQL() {
+		exWriter.status = http.StatusOK
+	} else {
+		exWriter.status = http.StatusInternalServerError
+	}
+
+	ResponseWritter(*exWriter, []byte(""))
 }
 
 func extend(w http.ResponseWriter, req *http.Request) (exWriter *ExtendedWriter, exReq *ExtendedRequester) {

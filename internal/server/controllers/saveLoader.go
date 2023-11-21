@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Meduzza143/metric/internal/logger"
-	server "github.com/Meduzza143/metric/internal/server/settings"
+	serverConfig "github.com/Meduzza143/metric/internal/server/settings"
 	"github.com/Meduzza143/metric/internal/server/storage"
 )
 
@@ -33,7 +33,7 @@ func (s *SaveLoader) openRead() (*os.File, error) {
 
 func GetSaveLoader() *SaveLoader {
 	saveLoaderOnce.Do(func() {
-		conf := server.GetConfig()
+		conf := serverConfig.GetConfig()
 		saveLoader = new(SaveLoader)
 		saveLoader.interval = conf.StoreInterval
 		saveLoader.path = conf.StoragePath
@@ -66,7 +66,7 @@ func (s *SaveLoader) Run(ctx context.Context) {
 }
 
 func (s *SaveLoader) LoadAll() {
-	mem := storage.GetInstance()
+	mem := storage.GetMemStorage()
 	l := logger.GetLogger()
 	file, err := saveLoader.openRead()
 	if err != nil {
@@ -81,7 +81,7 @@ func (s *SaveLoader) LoadAll() {
 }
 
 func (s *SaveLoader) SaveAll() {
-	mem := storage.GetInstance()
+	mem := storage.GetMemStorage()
 	l := logger.GetLogger()
 
 	if len(mem) > 0 {
