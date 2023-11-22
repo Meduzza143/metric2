@@ -38,10 +38,9 @@ type ExtendedRequester struct {
 func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 
 	exWriter, exReq := extend(w, req)
-
 	var answer []byte
-
 	var storage = storage.GetDBHandler()
+	defer storage.Close()
 
 	metric, _ := prepareRequest(*exReq)
 
@@ -51,7 +50,7 @@ func UpdateHandle(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	exWriter.status = storage.Check(metric.MetricName, metric.MetricType)
+	exWriter.status = Check(metric.MetricName, metric.MetricType)
 
 	if exWriter.status == http.StatusOK { //ok
 		storage.Update(&metric)
@@ -70,6 +69,7 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 
 	var answer []byte
 	var storage = storage.GetDBHandler()
+	defer storage.Close()
 
 	metric, err := prepareRequest(*exReq)
 	if err != nil {
@@ -79,7 +79,7 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	exWriter.status = storage.Check(metric.MetricName, metric.MetricType)
+	exWriter.status = Check(metric.MetricName, metric.MetricType)
 
 	if exWriter.status != http.StatusOK {
 		answer = []byte("wrong metric type")
@@ -102,8 +102,9 @@ func GetMetric(w http.ResponseWriter, req *http.Request) {
 func GetAll(w http.ResponseWriter, req *http.Request) {
 	exWriter, _ := extend(w, req)
 
-	//	var memStorage = storage.GetInstance()
 	var storage = storage.GetDBHandler()
+	defer storage.Close()
+
 	allValues := storage.GetAllValues()
 
 	body := ""

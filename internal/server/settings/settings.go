@@ -14,6 +14,7 @@ type Config struct {
 	Restore       bool
 	DBType        string
 	PSQLConn      string
+	DBName        string
 }
 
 var c *Config = nil
@@ -70,6 +71,8 @@ func (c *Config) initConfig() {
 		    хранению метрик в файле при наличии соответствующей переменной окружения или флага командной строки;
 		    хранению метрик в памяти.
 	*/
+	c.DBName = "metric"
+
 	PSQLConn, ok := os.LookupEnv("DATABASE_DSN")
 	if (ok) && (PSQLConn != "") {
 		c.PSQLConn = PSQLConn
